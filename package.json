@@ -1,7 +1,8 @@
 {
   "name": "developer-portfolio",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "license": "MIT",
   "author": "v1rtualWinter",
   "description": "A minimal developer portfolio with blog built with Next.js, Tailwind CSS, and Prisma.",
   "scripts": {
