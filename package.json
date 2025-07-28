@@ -1,9 +1,9 @@
 {
-  "name": "blog",
+  "name": "developer-portfolio",
   "version": "0.1.0",
   "private": true,
   "author": "v1rtualWinter",
-  "description": "A simple blog built with Next.js, Tailwind CSS, and Prisma.",
+  "description": "A minimal developer portfolio with blog built with Next.js, Tailwind CSS, and Prisma.",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -29,6 +29,7 @@
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-hover-card": "^1.1.14",
+    "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-menubar": "^1.1.15",
     "@radix-ui/react-navigation-menu": "^1.2.13",

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { MessageCircle, Edit, Trash2 } from 'lucide-react';
 import { AdminOnly } from '@/components/auth/role-guard';
-import { deletePost } from '@/lib/blog/actions';
+import { deletePost } from '@/lib/blog';
 import type { PublicPost } from '@/lib/blog/types';
 import { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -53,9 +53,6 @@ export function PostCard({ post, showActions = false }: PostCardProps) {
             <div className="flex items-center gap-2 mb-2">
               {!post.published && (
                 <Badge variant="secondary">Draft</Badge>
-              )}
-              {post.author.role === 'ADMIN' && (
-                <Badge variant="outline">Admin</Badge>
               )}
             </div>
             <CardTitle className="text-xl">

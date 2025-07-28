@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AdminOnly } from '@/components/auth/role-guard';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
-import { getAllPosts } from '@/lib/blog/actions';
+import { getAllPosts } from '@/lib/blog';
 import type { PublicPost } from '@/lib/blog/types';
 
 interface PostListProps {

@@ -12,7 +12,7 @@ import { Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { AdminOnly } from '@/components/auth/role-guard';
 import { CommentForm } from './comment-form';
 import { CommentList } from './comment-list';
-import { deletePost } from '@/lib/blog/actions';
+import { deletePost } from '@/lib/blog';
 import type { PublicPost } from '@/lib/blog/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';

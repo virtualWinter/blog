@@ -7,7 +7,15 @@ import type {
   EmailTemplate
 } from './types';
 
+/**
+ * Email templates for different types of notifications
+ */
 export const emailTemplates = {
+  /**
+   * Welcome email template for new users
+   * @param data - Welcome email data containing name and email
+   * @returns Email template with subject, HTML, and text content
+   */
   welcome: ({ name, email }: WelcomeEmailData): EmailTemplate => ({
     subject: 'Welcome to Our Blog!',
     html: `
@@ -31,6 +39,11 @@ export const emailTemplates = {
     text: `Welcome, ${name}!\n\nThank you for joining our blog community. We're excited to have you on board!\n\nYour account has been successfully created with the email: ${email}\n\nYou can now:\n- Read our latest blog posts\n- Comment on articles\n- Interact with other community members\n\nHappy reading!`,
   }),
 
+  /**
+   * Password reset email template
+   * @param data - Reset password data containing name and reset link
+   * @returns Email template with subject, HTML, and text content
+   */
   resetPassword: ({ name, resetLink }: ResetPasswordEmailData): EmailTemplate => ({
     subject: 'Reset Your Password',
     html: `
@@ -56,6 +69,11 @@ export const emailTemplates = {
     text: `Password Reset Request\n\nHi ${name},\n\nWe received a request to reset your password. Click the link below to create a new password:\n\n${resetLink}\n\nIf you didn't request this password reset, you can safely ignore this email.\n\nThis link will expire in 1 hour.`,
   }),
 
+  /**
+   * Contact form email template for admin notifications
+   * @param data - Contact form data containing name, email, and message
+   * @returns Email template with subject, HTML, and text content
+   */
   contactForm: ({ name, email, message }: ContactFormEmailData): EmailTemplate => ({
     subject: `New Contact Form Submission from ${name}`,
     html: `
@@ -77,6 +95,11 @@ export const emailTemplates = {
     text: `New Contact Form Submission\n\nName: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
   }),
 
+  /**
+   * Email verification template for new accounts
+   * @param data - Email verification data containing name and verification link
+   * @returns Email template with subject, HTML, and text content
+   */
   emailVerification: ({ name, verificationLink }: EmailVerificationData): EmailTemplate => ({
     subject: 'Verify Your Email Address',
     html: `
@@ -102,6 +125,11 @@ export const emailTemplates = {
     text: `Verify Your Email Address\n\nHi ${name},\n\nThank you for signing up! Please verify your email address by clicking the link below:\n\n${verificationLink}\n\nIf you didn't create an account, you can safely ignore this email.\n\nThis link will expire in 24 hours.`,
   }),
 
+  /**
+   * Email OTP template for two-factor authentication
+   * @param data - Email OTP data containing name and verification code
+   * @returns Email template with subject, HTML, and text content
+   */
   emailOtp: ({ name, code }: EmailOtpData): EmailTemplate => ({
     subject: 'Your Sign-In Code',
     html: `

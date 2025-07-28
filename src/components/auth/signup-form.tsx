@@ -69,6 +69,17 @@ export function SignUpForm() {
               disabled={isLoading}
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="Confirm your password"
+              required
+              disabled={isLoading}
+            />
+          </div>
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>

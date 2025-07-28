@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -17,13 +17,11 @@ import {
   User, 
   Settings, 
   LogOut, 
-  PenTool, 
-  BookOpen,
   Shield,
   Menu
 } from 'lucide-react';
-import { AdminOnly, AuthenticatedOnly } from '@/components/auth/role-guard';
-import { getCurrentUser } from '@/lib/auth';
+import { AuthenticatedOnly } from '@/components/auth/role-guard';
+import { getCurrentUserClient } from '@/lib/auth/client';
 import { signOut } from '@/lib/auth/actions';
 import type { PublicUser } from '@/lib/auth/types';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -31,13 +29,13 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 export function Header() {
   const [user, setUser] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+
 
   useEffect(() => {
     async function loadUser() {
       try {
-        const currentUser = await getCurrentUser();
-        setUser(currentUser as PublicUser | null);
+        const currentUser = await getCurrentUserClient();
+        setUser(currentUser);
       } catch (error) {
         console.error('Failed to load user:', error);
       } finally {
@@ -59,25 +57,6 @@ export function Header() {
   const userInitials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase()
     : user?.email[0].toUpperCase();
-
-  const NavigationItems = () => (
-    <>
-      <Link 
-        href="/blog" 
-        className="text-gray-600 hover:text-gray-900 transition-colors"
-      >
-        Blog
-      </Link>
-      <AdminOnly>
-        <Link 
-          href="/dashboard" 
-          className="text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          Dashboard
-        </Link>
-      </AdminOnly>
-    </>
-  );
 
   const UserMenu = () => {
     if (loading) {
@@ -129,6 +108,15 @@ export function Header() {
             </div>
           </div>
           <DropdownMenuSeparator />
+          <AuthenticatedOnly>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard">
+                <User className="mr-2 h-4 w-4" />
+                Dashboard
+              </Link>
+            </DropdownMenuItem>
+          </AuthenticatedOnly>
+          
           <DropdownMenuItem asChild>
             <Link href="/profile">
               <User className="mr-2 h-4 w-4" />
@@ -141,21 +129,7 @@ export function Header() {
               Settings
             </Link>
           </DropdownMenuItem>
-          <AdminOnly>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/blog/create">
-                <PenTool className="mr-2 h-4 w-4" />
-                New Post
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard">
-                <BookOpen className="mr-2 h-4 w-4" />
-                Dashboard
-              </Link>
-            </DropdownMenuItem>
-          </AdminOnly>
+
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />
@@ -167,21 +141,13 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <header className="border-b border-gray-100">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-14 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">B</span>
-            </div>
-            <span className="font-bold text-xl">Blog</span>
+          <Link href="/" className="font-medium text-gray-900">
+            vWinter's smol portfolio
           </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <NavigationItems />
-          </nav>
 
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center">
@@ -228,21 +194,19 @@ export function Header() {
                     >
                       Blog
                     </Link>
-                    <AdminOnly>
+                    <Link 
+                      href="mailto:hello@example.com" 
+                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                    >
+                      Contact
+                    </Link>
+                    <AuthenticatedOnly>
                       <Link 
                         href="/dashboard" 
                         className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
                       >
                         Dashboard
                       </Link>
-                      <Link 
-                        href="/blog/create" 
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
-                      >
-                        New Post
-                      </Link>
-                    </AdminOnly>
-                    <AuthenticatedOnly>
                       <Link 
                         href="/profile" 
                         className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"

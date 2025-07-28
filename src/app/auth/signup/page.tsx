@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { SignUpForm } from '@/components/auth/signup-form'
+import { Container } from '@/components/layout'
+import { Card, CardContent } from '@/components/ui/card'
 import { getSession } from '@/lib/auth'
 
 export default async function SignUpPage() {
@@ -11,9 +13,14 @@ export default async function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <SignUpForm />
+    <Container size="sm" className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+      <div className="w-full max-w-md space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <SignUpForm />
+          </CardContent>
+        </Card>
+        
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
@@ -23,6 +30,6 @@ export default async function SignUpPage() {
           </p>
         </div>
       </div>
-    </div>
+    </Container>
   )
 }

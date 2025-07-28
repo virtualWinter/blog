@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { updatePost } from '@/lib/blog/actions';
+import { updatePost } from '@/lib/blog';
 import type { PublicPost } from '@/lib/blog/types';
 
 interface EditPostFormProps {
@@ -20,6 +20,7 @@ export function EditPostForm({ post }: EditPostFormProps) {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [published, setPublished] = useState(post.published);
   const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
@@ -27,8 +28,9 @@ export function EditPostForm({ post }: EditPostFormProps) {
     setError('');
     setSuccess('');
 
-    // Add the post ID to the form data
+    // Add the post ID and published state to the form data
     formData.append('id', post.id);
+    formData.set('published', published.toString());
 
     const result = await updatePost(formData);
 
@@ -82,7 +84,8 @@ export function EditPostForm({ post }: EditPostFormProps) {
             <Switch
               id="published"
               name="published"
-              defaultChecked={post.published}
+              checked={published}
+              onCheckedChange={setPublished}
               disabled={isLoading}
             />
             <Label htmlFor="published">Published</Label>

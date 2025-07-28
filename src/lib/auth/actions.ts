@@ -1,34 +1,33 @@
 'use server';
 
-import { z } from 'zod';
 import { redirect } from 'next/navigation';
-import { hashPassword, verifyPassword, createSession, deleteSession, getSession, requireAdmin } from './auth';
-import { prisma } from '@/lib/prisma';
-import { sendWelcomeEmail, sendPasswordResetEmail, sendEmailVerification } from '@/lib/mail';
-import crypto from 'crypto';
 import {
+    hashPassword,
+    verifyPassword,
+    createSession,
+    deleteSession,
+    getSession,
+    requireAdmin,
     generateTOTPSetupData,
     verifyTOTPToken,
     generateBackupCodes,
     hashBackupCode,
     verifyBackupCode,
-    removeBackupCode
-} from './totp';
-import {
+    removeBackupCode,
     createEmailOtpToken,
     verifyEmailOtpToken,
     sendEmailOtp
-} from './email-otp';
+} from './index';
+import { signUpSchema, signInSchema, forgotPasswordSchema, resetPasswordSchema } from './schema';
+import { prisma } from '@/lib/prisma';
+import { sendWelcomeEmail, sendPasswordResetEmail, sendEmailVerification } from '@/lib/mail';
+import crypto from 'crypto';
 import type {
     SignUpResult,
     SignInResult,
     ForgotPasswordResult,
     ResetPasswordResult,
     EmailVerificationResult,
-    SignUpFormData,
-    SignInFormData,
-    ForgotPasswordFormData,
-    ResetPasswordFormData,
     PublicUser,
     AuthActionResult,
     TOTPSetupResult,
@@ -37,32 +36,20 @@ import type {
     EmailOtpResult,
     EmailOtpVerificationResult
 } from './types';
+import { UserRole } from './types';
 
-const signUpSchema = z.object({
-    email: z.email('Invalid email address'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    name: z.string().min(1, 'Name is required').optional(),
-    role: z.enum(['DEFAULT', 'ADMIN']).default('DEFAULT'),
-});
 
-const signInSchema = z.object({
-    email: z.email('Invalid email address'),
-    password: z.string().min(1, 'Password is required'),
-});
 
-const forgotPasswordSchema = z.object({
-    email: z.email('Invalid email address'),
-});
-
-const resetPasswordSchema = z.object({
-    token: z.string().min(1, 'Token is required'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-});
-
+/**
+ * Server action to create a new user account
+ * @param formData - Form data containing email, password, name, and role
+ * @returns Promise that resolves to sign up result with success/error status
+ */
 export async function signUp(formData: FormData): Promise<SignUpResult> {
     const result = signUpSchema.safeParse({
         email: formData.get('email'),
         password: formData.get('password'),
+        confirmPassword: formData.get('confirmPassword'),
         name: formData.get('name'),
         role: formData.get('role') || 'DEFAULT',
     });
@@ -136,6 +123,12 @@ export async function signUp(formData: FormData): Promise<SignUpResult> {
     }
 }
 
+/**
+ * Server action to authenticate a user and create a session
+ * Supports 2FA with TOTP and email OTP
+ * @param formData - Form data containing email, password, and optional 2FA tokens
+ * @returns Promise that resolves to sign in result with 2FA requirements if needed
+ */
 export async function signIn(formData: FormData): Promise<SignInResult & { requiresTOTP?: boolean; requiresEmailOtp?: boolean }> {
     const result = signInSchema.safeParse({
         email: formData.get('email'),
@@ -216,11 +209,56 @@ export async function signIn(formData: FormData): Promise<SignInResult & { requi
     }
 }
 
+/**
+ * Server action to sign out the current user and redirect to sign in page
+ * Deletes the current session and clears cookies
+ */
 export async function signOut() {
     await deleteSession();
     redirect('/auth/signin');
 }
 
+/**
+ * Server action to get the current authenticated user
+ * @returns Promise that resolves to the current user or null if not authenticated
+ */
+export async function getCurrentUserAction(): Promise<PublicUser | null> {
+    try {
+        const session = await getSession();
+        if (!session) return null;
+
+        const user = await prisma.user.findUnique({
+            where: { id: session.userId },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+                emailVerified: true,
+                totpEnabled: true,
+                emailOtpEnabled: true,
+                createdAt: true,
+            },
+        });
+
+        if (!user) return null;
+
+        return {
+            ...user,
+            role: user.role as UserRole,
+        };
+    } catch (error) {
+        console.error('Get current user action error:', error);
+        return null;
+    }
+}
+
+/**
+ * Server action to initiate password reset process
+ * Sends a password reset email if the user exists
+ * @param formData - Form data containing the user's email address
+ * @returns Promise that resolves to forgot password result
+ */
 export async function forgotPassword(formData: FormData): Promise<ForgotPasswordResult> {
     const result = forgotPasswordSchema.safeParse({
         email: formData.get('email'),
@@ -292,10 +330,17 @@ export async function forgotPassword(formData: FormData): Promise<ForgotPassword
     }
 }
 
+/**
+ * Server action to reset a user's password using a reset token
+ * Validates the token and updates the user's password
+ * @param formData - Form data containing reset token and new password
+ * @returns Promise that resolves to reset password result
+ */
 export async function resetPassword(formData: FormData): Promise<ResetPasswordResult> {
     const result = resetPasswordSchema.safeParse({
         token: formData.get('token'),
         password: formData.get('password'),
+        confirmPassword: formData.get('confirmPassword'),
     });
 
     if (!result.success) {
@@ -350,6 +395,11 @@ export async function resetPassword(formData: FormData): Promise<ResetPasswordRe
     }
 }
 
+/**
+ * Server action to verify a user's email address using a verification token
+ * @param token - The email verification token
+ * @returns Promise that resolves to email verification result
+ */
 export async function verifyEmail(token: string): Promise<EmailVerificationResult> {
     try {
         // Find valid verification token
@@ -387,6 +437,11 @@ export async function verifyEmail(token: string): Promise<EmailVerificationResul
     }
 }
 
+/**
+ * Server action to resend email verification for the current user
+ * Creates a new verification token and sends verification email
+ * @returns Promise that resolves to email verification result
+ */
 export async function resendVerificationEmail(): Promise<EmailVerificationResult> {
     try {
         const session = await getSession();
@@ -457,6 +512,12 @@ export async function resendVerificationEmail(): Promise<EmailVerificationResult
 }
 
 // Admin-only actions
+
+/**
+ * Server action to promote a user to admin role (admin only)
+ * @param userId - The ID of the user to promote
+ * @returns Promise that resolves to action result
+ */
 export async function promoteUserToAdmin(userId: string): Promise<AuthActionResult> {
     try {
         // Check if current user is admin
@@ -485,6 +546,12 @@ export async function promoteUserToAdmin(userId: string): Promise<AuthActionResu
     }
 }
 
+/**
+ * Server action to demote a user from admin role (admin only)
+ * Prevents self-demotion for security
+ * @param userId - The ID of the user to demote
+ * @returns Promise that resolves to action result
+ */
 export async function demoteUserFromAdmin(userId: string): Promise<AuthActionResult> {
     try {
         // Check if current user is admin
@@ -521,6 +588,10 @@ export async function demoteUserFromAdmin(userId: string): Promise<AuthActionRes
     }
 }
 
+/**
+ * Server action to get all users in the system (admin only)
+ * @returns Promise that resolves to array of public user data or error
+ */
 export async function getAllUsers(): Promise<{ users?: PublicUser[]; error?: string }> {
     try {
         // Check if current user is admin
@@ -554,6 +625,12 @@ export async function getAllUsers(): Promise<{ users?: PublicUser[]; error?: str
     }
 }
 
+/**
+ * Server action to delete a user account (admin only)
+ * Prevents self-deletion for security
+ * @param userId - The ID of the user to delete
+ * @returns Promise that resolves to action result
+ */
 export async function deleteUser(userId: string): Promise<AuthActionResult> {
     try {
         // Check if current user is admin
@@ -590,6 +667,12 @@ export async function deleteUser(userId: string): Promise<AuthActionResult> {
 }
 
 // TOTP Actions
+
+/**
+ * Server action to initiate TOTP setup for the current user
+ * Generates secret, QR code, and backup codes
+ * @returns Promise that resolves to TOTP setup result with setup data
+ */
 export async function setupTOTP(): Promise<TOTPSetupResult> {
     try {
         const session = await getSession();
@@ -635,6 +718,12 @@ export async function setupTOTP(): Promise<TOTPSetupResult> {
     }
 }
 
+/**
+ * Server action to enable TOTP for the current user
+ * Verifies the TOTP token and activates 2FA
+ * @param token - The TOTP token to verify
+ * @returns Promise that resolves to TOTP verification result
+ */
 export async function enableTOTP(token: string): Promise<TOTPVerificationResult> {
     try {
         const session = await getSession();
@@ -696,6 +785,12 @@ export async function enableTOTP(token: string): Promise<TOTPVerificationResult>
     }
 }
 
+/**
+ * Server action to disable TOTP for the current user
+ * Requires password verification for security
+ * @param password - The user's current password
+ * @returns Promise that resolves to TOTP disable result
+ */
 export async function disableTOTP(password: string): Promise<TOTPDisableResult> {
     try {
         const session = await getSession();
@@ -744,6 +839,15 @@ export async function disableTOTP(password: string): Promise<TOTPDisableResult> 
     }
 }
 
+/**
+ * Server action to verify TOTP during sign in process
+ * Supports both TOTP tokens and backup codes
+ * @param email - The user's email address
+ * @param password - The user's password
+ * @param totpToken - Optional TOTP token
+ * @param backupCode - Optional backup code
+ * @returns Promise that resolves to TOTP verification result
+ */
 export async function verifyTOTPForSignIn(email: string, password: string, totpToken?: string, backupCode?: string): Promise<TOTPVerificationResult> {
     try {
         // Find user
@@ -828,6 +932,11 @@ export async function verifyTOTPForSignIn(email: string, password: string, totpT
 }
 
 // Email OTP Actions
+
+/**
+ * Server action to enable email OTP for the current user
+ * @returns Promise that resolves to email OTP result
+ */
 export async function enableEmailOtp(): Promise<EmailOtpResult> {
     try {
         const session = await getSession();
@@ -870,6 +979,12 @@ export async function enableEmailOtp(): Promise<EmailOtpResult> {
     }
 }
 
+/**
+ * Server action to disable email OTP for the current user
+ * Requires password verification for security
+ * @param password - The user's current password
+ * @returns Promise that resolves to email OTP result
+ */
 export async function disableEmailOtp(password: string): Promise<EmailOtpResult> {
     try {
         const session = await getSession();
@@ -918,6 +1033,11 @@ export async function disableEmailOtp(password: string): Promise<EmailOtpResult>
     }
 }
 
+/**
+ * Server action to send an email OTP code to a user
+ * @param email - The user's email address
+ * @returns Promise that resolves to email OTP result
+ */
 export async function sendEmailOtpCode(email: string): Promise<EmailOtpResult> {
     try {
         // Find user
@@ -958,6 +1078,13 @@ export async function sendEmailOtpCode(email: string): Promise<EmailOtpResult> {
     }
 }
 
+/**
+ * Server action to verify email OTP during sign in process
+ * @param email - The user's email address
+ * @param password - The user's password
+ * @param emailOtpToken - Optional email OTP token
+ * @returns Promise that resolves to email OTP verification result
+ */
 export async function verifyEmailOtpForSignIn(email: string, password: string, emailOtpToken?: string): Promise<EmailOtpVerificationResult> {
     try {
         // Find user

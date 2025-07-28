@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUserClient } from '@/lib/auth/client';
 import { UserRole } from '@/lib/auth/types';
 import type { PublicUser } from '@/lib/auth/types';
 
@@ -26,8 +26,8 @@ export function RoleGuard({
     useEffect(() => {
         async function fetchUser() {
             try {
-                const currentUser = await getCurrentUser();
-                setUser(currentUser as PublicUser | null);
+                const currentUser = await getCurrentUserClient();
+                setUser(currentUser);
             } catch (error) {
                 console.error('Failed to fetch user:', error);
             } finally {

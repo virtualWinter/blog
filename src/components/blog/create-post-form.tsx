@@ -9,18 +9,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { createPost } from '@/lib/blog/actions';
+import { createPost } from '@/lib/blog';
 
 export function CreatePostForm() {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [published, setPublished] = useState(false);
   const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
     setError('');
     setSuccess('');
+
+    // Ensure the published state is correctly set in form data
+    formData.set('published', published.toString());
 
     const result = await createPost(formData);
 
@@ -33,6 +37,7 @@ export function CreatePostForm() {
       // Reset form
       const form = document.getElementById('create-post-form') as HTMLFormElement;
       form?.reset();
+      setPublished(false);
       // Optionally redirect to the post or blog list
       if (result.post) {
         setTimeout(() => {
@@ -77,6 +82,8 @@ export function CreatePostForm() {
             <Switch
               id="published"
               name="published"
+              checked={published}
+              onCheckedChange={setPublished}
               disabled={isLoading}
             />
             <Label htmlFor="published">Publish immediately</Label>

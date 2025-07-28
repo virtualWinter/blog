@@ -8,8 +8,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Edit, Trash2 } from 'lucide-react';
-import { getCommentsByPostId, deleteComment } from '@/lib/blog/actions';
-import { getCurrentUser } from '@/lib/auth';
+import { getCommentsByPostId, deleteComment } from '@/lib/blog';
+import { getCurrentUserClient } from '@/lib/auth/client';
 import { EditCommentForm } from './edit-comment-form';
 import type { PublicComment } from '@/lib/blog/types';
 import type { PublicUser } from '@/lib/auth/types';
@@ -50,8 +50,8 @@ export function CommentList({ postId, initialComments, refreshTrigger }: Comment
 
   async function loadCurrentUser() {
     try {
-      const user = await getCurrentUser();
-      setCurrentUser(user as PublicUser | null);
+      const user = await getCurrentUserClient();
+      setCurrentUser(user);
     } catch (error) {
       console.error('Failed to load current user:', error);
     }
@@ -150,7 +150,7 @@ export function CommentList({ postId, initialComments, refreshTrigger }: Comment
                           {authorInitials}
                         </AvatarFallback>
                       </Avatar>
-                      
+
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-medium text-sm">
@@ -165,11 +165,11 @@ export function CommentList({ postId, initialComments, refreshTrigger }: Comment
                             {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                           </span>
                         </div>
-                        
+
                         <p className="text-gray-700 whitespace-pre-wrap">
                           {comment.content}
                         </p>
-                        
+
                         {canEditComment(comment) && (
                           <div className="flex gap-2 mt-3">
                             <Button

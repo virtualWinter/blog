@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { updateComment } from '@/lib/blog/actions';
+import { updateComment } from '@/lib/blog';
 import type { PublicComment } from '@/lib/blog/types';
 
 interface EditCommentFormProps {
