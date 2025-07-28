@@ -21,7 +21,7 @@
     # Copy dependencies
     COPY --from=deps /app/node_modules ./node_modules
     
-    # Copy everything else
+    # Copy all project files
     COPY . .
     
     # Generate Prisma client (custom output to src/generated)
@@ -33,12 +33,11 @@
     # --- Production runner ---
     FROM base AS runner
     
-    # Copy only necessary files
+    # Copy only what's needed for running the app
     COPY --from=builder /app/public ./public
     COPY --from=builder /app/.next ./.next
     COPY --from=builder /app/node_modules ./node_modules
     COPY --from=builder /app/package.json ./package.json
-    COPY --from=builder /app/next.config.js ./next.config.js
     
     # Copy generated Prisma client
     COPY --from=builder /app/src/generated ./src/generated
