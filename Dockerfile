@@ -12,28 +12,36 @@
     FROM base AS deps
     COPY package.json pnpm-lock.yaml* ./
     
-    # Allow postinstall scripts (for prisma, sharp, tailwind oxide, etc.)
+    # Allow postinstall scripts (important for Prisma)
     RUN pnpm install --frozen-lockfile --ignore-scripts=false
     
     # --- Build stage ---
     FROM base AS builder
+    
+    # Copy dependencies
     COPY --from=deps /app/node_modules ./node_modules
+    
+    # Copy everything else
     COPY . .
     
+    # Generate Prisma client (custom output to src/generated)
+    RUN pnpm db:generate
+    
+    # Build Next.js app
     RUN pnpm build
     
     # --- Production runner ---
     FROM base AS runner
     
+    # Copy only necessary files
     COPY --from=builder /app/public ./public
     COPY --from=builder /app/.next ./.next
     COPY --from=builder /app/node_modules ./node_modules
     COPY --from=builder /app/package.json ./package.json
     COPY --from=builder /app/next.config.js ./next.config.js
     
-    # Prisma support (optional if used)
-    COPY --from=builder /app/prisma ./prisma
-    COPY --from=builder /app/.prisma ./node_modules/.prisma
+    # Copy generated Prisma client
+    COPY --from=builder /app/src/generated ./src/generated
     
     EXPOSE 3000
     CMD ["pnpm", "start"]
