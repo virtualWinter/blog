@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { ProfileStats } from '@/components/profile/profile-stats';
 import { getCurrentUser } from '@/lib/auth';
 import { formatDistanceToNow } from 'date-fns';
 import { User, Mail, Calendar, Shield, CheckCircle, XCircle } from 'lucide-react';
@@ -31,6 +32,7 @@ export default async function ProfilePage() {
           </Button>
         </div>
 
+        {/* Main Profile Card */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
@@ -106,30 +108,14 @@ export default async function ProfilePage() {
                   </div>
                 </div>
               </div>
-              
-              <Separator />
-              
-              <div className="space-y-3">
-                <h3 className="font-medium">Security Settings</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span>Two-Factor Authentication (TOTP)</span>
-                    <Badge variant={user.totpEnabled ? 'default' : 'secondary'}>
-                      {user.totpEnabled ? 'Enabled' : 'Disabled'}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Email OTP</span>
-                    <Badge variant={user.emailOtpEnabled ? 'default' : 'secondary'}>
-                      {user.emailOtpEnabled ? 'Enabled' : 'Disabled'}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Profile Stats */}
+        <ProfileStats user={user} />
+
+        {/* Email Verification Warning */}
         {!user.emailVerified && (
           <Card className="border-yellow-200 bg-yellow-50">
             <CardContent className="pt-6">
@@ -138,12 +124,9 @@ export default async function ProfilePage() {
                 <div className="flex-1">
                   <p className="font-medium text-yellow-800">Email Not Verified</p>
                   <p className="text-sm text-yellow-700">
-                    Please verify your email address to access all features.
+                    Please verify your email address to access all features and improve your account security.
                   </p>
                 </div>
-                <Button size="sm" variant="outline">
-                  Resend Verification
-                </Button>
               </div>
             </CardContent>
           </Card>
