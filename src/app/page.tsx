@@ -15,10 +15,10 @@ export default async function Home() {
       {/* Hero Section */}
       <section className="py-24">
         <div className="max-w-2xl">
-          <h1 className="text-4xl font-bold mb-4 text-gray-900">
+          <h1 className="text-4xl font-bold mb-4 text-foreground">
             Hi, I'm vWinter
           </h1>
-          <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+          <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
             Welcome to my portfolio and blog.
           </p>
 
@@ -28,14 +28,14 @@ export default async function Home() {
               href="https://github.com/v1rtualWinter" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <GitHubLogoIcon className="h-5 w-5" />
             </Link>
             
             <Link 
               href="mailto:me@vwinter.moe"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <Mail className="h-5 w-5" />
             </Link>
@@ -47,10 +47,10 @@ export default async function Home() {
       {recentPosts.length > 0 && (
         <section className="py-16">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-2">Recent Posts</h2>
+            <h2 className="text-2xl font-bold mb-2 text-foreground">Recent Posts</h2>
             <Link 
               href="/blog" 
-              className="text-gray-600 hover:text-gray-900 transition-colors text-sm"
+              className="text-muted-foreground hover:text-foreground transition-colors text-sm"
             >
               View all →
             </Link>
