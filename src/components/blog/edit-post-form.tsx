@@ -40,9 +40,9 @@ export function EditPostForm({ post }: EditPostFormProps) {
     } else {
       setSuccess(result.message || 'Post updated successfully!');
       setIsLoading(false);
-      // Optionally redirect back to the post
+      // Redirect back to dashboard posts
       setTimeout(() => {
-        router.push(`/blog/${post.id}`);
+        router.push('/dashboard/posts');
       }, 1000);
     }
   }

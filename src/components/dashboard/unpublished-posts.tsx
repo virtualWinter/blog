@@ -60,7 +60,7 @@ export function UnpublishedPosts({ posts }: UnpublishedPostsProps) {
                   </Link>
                 </Button>
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`/blog/${post.id}/edit`}>
+                  <Link href={`/dashboard/posts/${post.id}/edit`}>
                     <Edit className="h-3 w-3 mr-1" />
                     Edit
                   </Link>

@@ -69,7 +69,7 @@ export function PostCard({ post, showActions = false }: PostCardProps) {
             <AdminOnly>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`/blog/${post.id}/edit`}>
+                  <Link href={`/dashboard/posts/${post.id}/edit`}>
                     <Edit className="h-4 w-4" />
                   </Link>
                 </Button>

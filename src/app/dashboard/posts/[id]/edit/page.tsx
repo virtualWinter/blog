@@ -4,13 +4,13 @@ import { Container } from '@/components/layout';
 import { getPostById } from '@/lib/blog';
 import { requireAdmin } from '@/lib/auth';
 
-interface EditPostPageProps {
+interface DashboardEditPostPageProps {
   params: Promise<{
     id: string;
   }>;
 }
 
-export default async function EditPostPage({ params }: EditPostPageProps) {
+export default async function DashboardEditPostPage({ params }: DashboardEditPostPageProps) {
   // Check admin authorization
   const authResult = await requireAdmin();
   if (!authResult.authorized) {
@@ -26,7 +26,14 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
 
   return (
     <Container size="md">
-      <EditPostForm post={result.post} />
+      <div className="py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Edit Post</h1>
+          <p className="text-gray-600">Update your blog post</p>
+        </div>
+        
+        <EditPostForm post={result.post} />
+      </div>
     </Container>
   );
 }

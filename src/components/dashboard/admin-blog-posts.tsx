@@ -88,7 +88,7 @@ export function AdminBlogPosts({ posts: initialPosts }: AdminBlogPostsProps) {
               </CardDescription>
             </div>
             <Button asChild>
-              <Link href="/admin/posts/new">
+              <Link href="/dashboard/posts/create">
                 <Plus className="h-4 w-4 mr-2" />
                 New Post
               </Link>
@@ -100,7 +100,7 @@ export function AdminBlogPosts({ posts: initialPosts }: AdminBlogPostsProps) {
             <div className="text-center py-8">
               <p className="text-gray-500 mb-4">No blog posts found</p>
               <Button asChild>
-                <Link href="/admin/posts/new">
+                <Link href="/dashboard/posts/create">
                   <Plus className="h-4 w-4 mr-2" />
                   Create your first post
                 </Link>
@@ -168,7 +168,7 @@ export function AdminBlogPosts({ posts: initialPosts }: AdminBlogPostsProps) {
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/admin/posts/${post.id}/edit`}>
+                              <Link href={`/dashboard/posts/${post.id}/edit`}>
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit
                               </Link>

@@ -85,7 +85,7 @@ export function PostList({
           </h2>
           <AdminOnly>
             <Button asChild>
-              <Link href="/blog/create">
+              <Link href="/dashboard/posts/create">
                 <Plus className="h-4 w-4 mr-2" />
                 New Post
               </Link>
@@ -99,7 +99,7 @@ export function PostList({
           <p className="text-gray-500 mb-4">No posts found.</p>
           <AdminOnly>
             <Button asChild>
-              <Link href="/blog/create">
+              <Link href="/dashboard/posts/create">
                 <Plus className="h-4 w-4 mr-2" />
                 Create your first post
               </Link>

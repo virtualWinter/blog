@@ -4,18 +4,21 @@ import { jwtVerify } from 'jose'
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
 
 const protectedRoutes = ['/dashboard']
+const adminRoutes = ['/dashboard']
 const authRoutes = ['/auth/signin', '/auth/signup']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const sessionCookie = request.cookies.get('session')
 
-  // Check if user has a valid session
+  // Check if user has a valid session and get user data
   let isAuthenticated = false
+  let userRole = null
   if (sessionCookie) {
     try {
-      await jwtVerify(sessionCookie.value, JWT_SECRET)
+      const { payload } = await jwtVerify(sessionCookie.value, JWT_SECRET)
       isAuthenticated = true
+      userRole = payload.role as string
     } catch {
       // Invalid token
       isAuthenticated = false
@@ -30,6 +33,13 @@ export async function middleware(request: NextRequest) {
   // Redirect unauthenticated users away from protected pages
   if (!isAuthenticated && protectedRoutes.some(route => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL('/auth/signin', request.url))
+  }
+
+  // Check admin access for admin routes
+  if (isAuthenticated && adminRoutes.some(route => pathname.startsWith(route))) {
+    if (userRole !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/auth/signin', request.url))
+    }
   }
 
   return NextResponse.next()

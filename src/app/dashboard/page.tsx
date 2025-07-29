@@ -18,16 +18,7 @@ export default async function DashboardPage() {
     redirect('/auth/signin')
   }
 
-  if (!isAdmin(user.role)) {
-    return (
-      <Container size="lg">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-red-600 mb-2">Unauthorized</h1>
-          <p className="text-gray-600">Sorry but no.</p>
-        </div>
-      </Container>
-    )
-  }
+  // Admin check is now handled by middleware
 
   // Fetch data for admin dashboard
   const [statsResult, postsResult, usersResult] = await Promise.all([
@@ -79,6 +70,16 @@ export default async function DashboardPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
           <p className="text-gray-600">Manage your blog and users</p>
+          
+          {/* Dashboard Navigation */}
+          <div className="flex gap-4 mt-4">
+            <Button variant="outline" asChild>
+              <Link href="/dashboard">Overview</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/posts">Manage Posts</Link>
+            </Button>
+          </div>
         </div>
 
         {/* Admin Stats */}
@@ -113,7 +114,7 @@ export default async function DashboardPage() {
             <CardContent>
               <div className="flex flex-wrap gap-4">
                 <Button asChild>
-                  <Link href="/admin/posts/new">
+                  <Link href="/dashboard/posts/create">
                     <BookOpen className="h-4 w-4 mr-2" />
                     New Post
                   </Link>

@@ -38,10 +38,10 @@ export function CreatePostForm() {
       const form = document.getElementById('create-post-form') as HTMLFormElement;
       form?.reset();
       setPublished(false);
-      // Optionally redirect to the post or blog list
+      // Redirect to dashboard posts after creation
       if (result.post) {
         setTimeout(() => {
-          router.push(`/blog/${result.post!.id}`);
+          router.push('/dashboard/posts');
         }, 1000);
       }
     }

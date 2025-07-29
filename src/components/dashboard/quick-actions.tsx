@@ -19,7 +19,7 @@ export function QuickActions({ isAdmin }: QuickActionsProps) {
         <div className="grid gap-2">
           {isAdmin && (
             <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/blog/create">
+              <Link href="/dashboard/posts/create">
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Post
               </Link>
