@@ -20,7 +20,10 @@ import {
 } from './index';
 import { signUpSchema, signInSchema, forgotPasswordSchema, resetPasswordSchema } from './schema';
 import { prisma } from '@/lib/prisma';
+import { safeDeleteSessions, safeDbOperation } from '@/lib/db-utils';
 import { sendWelcomeEmail, sendPasswordResetEmail, sendEmailVerification } from '@/lib/mail';
+import { rateLimit } from '@/lib/rate-limit';
+import { getClientIP } from '@/lib/rate-limit/utils';
 import crypto from 'crypto';
 import type {
     SignUpResult,
@@ -37,6 +40,25 @@ import type {
     EmailOtpVerificationResult
 } from './types';
 import { UserRole } from './types';
+
+/**
+ * Formats a rate limit error message with time remaining
+ * @param retryAfter - Seconds until retry is allowed
+ * @param action - The action being rate limited
+ * @returns Formatted error message
+ */
+function formatAuthRateLimitError(retryAfter: number, action: string): string {
+    const minutes = Math.ceil(retryAfter / 60);
+    const hours = Math.ceil(retryAfter / 3600);
+    
+    if (retryAfter >= 3600) {
+        return `Too many ${action} attempts. Please wait ${hours} hour${hours > 1 ? 's' : ''} before trying again.`;
+    } else if (retryAfter >= 60) {
+        return `Too many ${action} attempts. Please wait ${minutes} minute${minutes > 1 ? 's' : ''} before trying again.`;
+    } else {
+        return `Too many ${action} attempts. Please wait ${retryAfter} second${retryAfter > 1 ? 's' : ''} before trying again.`;
+    }
+}
 
 
 
@@ -63,6 +85,32 @@ export async function signUp(formData: FormData): Promise<SignUpResult> {
     const { email, password, name, role } = result.data;
 
     try {
+        // Rate limit signup attempts: 3 signups per hour per IP
+        const clientIP = await getClientIP();
+        const ipRateLimitResult = await rateLimit(clientIP, {
+            windowMs: 60 * 60 * 1000, // 1 hour
+            maxRequests: 3,
+            namespace: 'signup-ip',
+        });
+
+        if (!ipRateLimitResult.success) {
+            return {
+                error: formatAuthRateLimitError(ipRateLimitResult.retryAfter, 'signup'),
+            };
+        }
+
+        // Rate limit signup attempts per email: 2 signups per day per email
+        const emailRateLimitResult = await rateLimit(email.toLowerCase(), {
+            windowMs: 24 * 60 * 60 * 1000, // 24 hours
+            maxRequests: 2,
+            namespace: 'signup-email',
+        });
+
+        if (!emailRateLimitResult.success) {
+            return {
+                error: formatAuthRateLimitError(emailRateLimitResult.retryAfter, 'signup for this email'),
+            };
+        }
         // Check if user already exists
         const existingUser = await prisma.user.findUnique({
             where: { email },
@@ -147,6 +195,32 @@ export async function signIn(formData: FormData): Promise<SignInResult & { requi
     const emailOtpToken = formData.get('emailOtpToken') as string;
 
     try {
+        // Rate limit signin attempts: 5 attempts per 15 minutes per IP
+        const clientIP = await getClientIP();
+        const ipRateLimitResult = await rateLimit(clientIP, {
+            windowMs: 15 * 60 * 1000, // 15 minutes
+            maxRequests: 5,
+            namespace: 'signin-ip',
+        });
+
+        if (!ipRateLimitResult.success) {
+            return {
+                error: formatAuthRateLimitError(ipRateLimitResult.retryAfter, 'signin'),
+            };
+        }
+
+        // Rate limit signin attempts per email: 3 attempts per 15 minutes per email
+        const emailRateLimitResult = await rateLimit(email.toLowerCase(), {
+            windowMs: 15 * 60 * 1000, // 15 minutes
+            maxRequests: 3,
+            namespace: 'signin-email',
+        });
+
+        if (!emailRateLimitResult.success) {
+            return {
+                error: formatAuthRateLimitError(emailRateLimitResult.retryAfter, 'signin for this email'),
+            };
+        }
         // First verify basic credentials
         const user = await prisma.user.findUnique({
             where: { email },
@@ -273,6 +347,32 @@ export async function forgotPassword(formData: FormData): Promise<ForgotPassword
     const { email } = result.data;
 
     try {
+        // Rate limit forgot password attempts: 3 attempts per hour per IP
+        const clientIP = await getClientIP();
+        const ipRateLimitResult = await rateLimit(clientIP, {
+            windowMs: 60 * 60 * 1000, // 1 hour
+            maxRequests: 3,
+            namespace: 'forgot-password-ip',
+        });
+
+        if (!ipRateLimitResult.success) {
+            return {
+                error: formatAuthRateLimitError(ipRateLimitResult.retryAfter, 'password reset'),
+            };
+        }
+
+        // Rate limit forgot password attempts per email: 2 attempts per hour per email
+        const emailRateLimitResult = await rateLimit(email.toLowerCase(), {
+            windowMs: 60 * 60 * 1000, // 1 hour
+            maxRequests: 2,
+            namespace: 'forgot-password-email',
+        });
+
+        if (!emailRateLimitResult.success) {
+            return {
+                error: formatAuthRateLimitError(emailRateLimitResult.retryAfter, 'password reset for this email'),
+            };
+        }
         // Find user
         const user = await prisma.user.findUnique({
             where: { email },
@@ -352,6 +452,19 @@ export async function resetPassword(formData: FormData): Promise<ResetPasswordRe
     const { token, password } = result.data;
 
     try {
+        // Rate limit password reset attempts: 5 attempts per hour per IP
+        const clientIP = await getClientIP();
+        const ipRateLimitResult = await rateLimit(clientIP, {
+            windowMs: 60 * 60 * 1000, // 1 hour
+            maxRequests: 5,
+            namespace: 'reset-password-ip',
+        });
+
+        if (!ipRateLimitResult.success) {
+            return {
+                error: formatAuthRateLimitError(ipRateLimitResult.retryAfter, 'password reset confirmation'),
+            };
+        }
         // Find valid reset token
         const resetToken = await prisma.passwordResetToken.findUnique({
             where: { token },
@@ -379,9 +492,12 @@ export async function resetPassword(formData: FormData): Promise<ResetPasswordRe
         });
 
         // Delete all sessions to force re-login
-        await prisma.session.deleteMany({
-            where: { userId: resetToken.userId },
-        });
+        try {
+            await safeDeleteSessions({ userId: resetToken.userId });
+        } catch (error) {
+            console.error('Error deleting user sessions:', error);
+            // Continue execution even if session deletion fails
+        }
 
         return {
             success: true,
@@ -448,6 +564,19 @@ export async function resendVerificationEmail(): Promise<EmailVerificationResult
         if (!session) {
             return {
                 error: 'You must be signed in to resend verification email.',
+            };
+        }
+
+        // Rate limit verification email resends: 3 attempts per hour per user
+        const userRateLimitResult = await rateLimit(session.userId, {
+            windowMs: 60 * 60 * 1000, // 1 hour
+            maxRequests: 3,
+            namespace: 'resend-verification',
+        });
+
+        if (!userRateLimitResult.success) {
+            return {
+                error: formatAuthRateLimitError(userRateLimitResult.retryAfter, 'verification email'),
             };
         }
 
@@ -682,6 +811,19 @@ export async function setupTOTP(): Promise<TOTPSetupResult> {
             };
         }
 
+        // Rate limit TOTP setup attempts: 5 attempts per hour per user
+        const userRateLimitResult = await rateLimit(session.userId, {
+            windowMs: 60 * 60 * 1000, // 1 hour
+            maxRequests: 5,
+            namespace: 'totp-setup',
+        });
+
+        if (!userRateLimitResult.success) {
+            return {
+                error: formatAuthRateLimitError(userRateLimitResult.retryAfter, 'TOTP setup'),
+            };
+        }
+
         const user = await prisma.user.findUnique({
             where: { id: session.userId },
         });
@@ -731,6 +873,20 @@ export async function enableTOTP(token: string): Promise<TOTPVerificationResult>
             return {
                 success: false,
                 error: 'You must be signed in to enable TOTP.',
+            };
+        }
+
+        // Rate limit TOTP enable attempts: 10 attempts per hour per user
+        const userRateLimitResult = await rateLimit(session.userId, {
+            windowMs: 60 * 60 * 1000, // 1 hour
+            maxRequests: 10,
+            namespace: 'totp-enable',
+        });
+
+        if (!userRateLimitResult.success) {
+            return {
+                success: false,
+                error: formatAuthRateLimitError(userRateLimitResult.retryAfter, 'TOTP verification'),
             };
         }
 
@@ -850,6 +1006,20 @@ export async function disableTOTP(password: string): Promise<TOTPDisableResult> 
  */
 export async function verifyTOTPForSignIn(email: string, password: string, totpToken?: string, backupCode?: string): Promise<TOTPVerificationResult> {
     try {
+        // Rate limit TOTP verification attempts during signin: 10 attempts per hour per email
+        const emailRateLimitResult = await rateLimit(email.toLowerCase(), {
+            windowMs: 60 * 60 * 1000, // 1 hour
+            maxRequests: 10,
+            namespace: 'totp-signin-verify',
+        });
+
+        if (!emailRateLimitResult.success) {
+            return {
+                success: false,
+                error: formatAuthRateLimitError(emailRateLimitResult.retryAfter, 'TOTP verification during signin'),
+            };
+        }
+
         // Find user
         const user = await prisma.user.findUnique({
             where: { email },
@@ -1029,6 +1199,126 @@ export async function disableEmailOtp(password: string): Promise<EmailOtpResult>
         console.error('Email OTP disable error:', error);
         return {
             error: 'Something went wrong. Please try again.',
+        };
+    }
+}
+
+/**
+ * Checks authentication rate limits for the current IP and email without incrementing counters
+ * @param email - Optional email to check email-specific limits
+ * @returns Promise that resolves to rate limit status
+ */
+export async function checkAuthRateLimits(email?: string): Promise<{
+    canSignup: boolean;
+    canSignin: boolean;
+    canForgotPassword: boolean;
+    canResetPassword: boolean;
+    signupRemaining: number;
+    signinRemaining: number;
+    forgotPasswordRemaining: number;
+    resetPasswordRemaining: number;
+    error?: string;
+}> {
+    try {
+        const clientIP = await getClientIP();
+
+        // Check IP-based limits
+        const [
+            signupIpCheck,
+            signinIpCheck,
+            forgotPasswordIpCheck,
+            resetPasswordIpCheck,
+        ] = await Promise.all([
+            rateLimit(clientIP, { windowMs: 60 * 60 * 1000, maxRequests: 3, namespace: 'signup-ip' }),
+            rateLimit(clientIP, { windowMs: 15 * 60 * 1000, maxRequests: 5, namespace: 'signin-ip' }),
+            rateLimit(clientIP, { windowMs: 60 * 60 * 1000, maxRequests: 3, namespace: 'forgot-password-ip' }),
+            rateLimit(clientIP, { windowMs: 60 * 60 * 1000, maxRequests: 5, namespace: 'reset-password-ip' }),
+        ]);
+
+        let emailSignupCheck = { success: true, remaining: 2 };
+        let emailSigninCheck = { success: true, remaining: 3 };
+        let emailForgotPasswordCheck = { success: true, remaining: 2 };
+
+        // Check email-based limits if email is provided
+        if (email) {
+            const [emailSignup, emailSignin, emailForgotPassword] = await Promise.all([
+                rateLimit(email.toLowerCase(), { windowMs: 24 * 60 * 60 * 1000, maxRequests: 2, namespace: 'signup-email' }),
+                rateLimit(email.toLowerCase(), { windowMs: 15 * 60 * 1000, maxRequests: 3, namespace: 'signin-email' }),
+                rateLimit(email.toLowerCase(), { windowMs: 60 * 60 * 1000, maxRequests: 2, namespace: 'forgot-password-email' }),
+            ]);
+
+            emailSignupCheck = emailSignup;
+            emailSigninCheck = emailSignin;
+            emailForgotPasswordCheck = emailForgotPassword;
+        }
+
+        return {
+            canSignup: signupIpCheck.success && emailSignupCheck.success,
+            canSignin: signinIpCheck.success && emailSigninCheck.success,
+            canForgotPassword: forgotPasswordIpCheck.success && emailForgotPasswordCheck.success,
+            canResetPassword: resetPasswordIpCheck.success,
+            signupRemaining: Math.min(signupIpCheck.remaining, emailSignupCheck.remaining),
+            signinRemaining: Math.min(signinIpCheck.remaining, emailSigninCheck.remaining),
+            forgotPasswordRemaining: Math.min(forgotPasswordIpCheck.remaining, emailForgotPasswordCheck.remaining),
+            resetPasswordRemaining: resetPasswordIpCheck.remaining,
+        };
+    } catch (error) {
+        console.error('Check auth rate limits error:', error);
+        return {
+            canSignup: true, // Fail open
+            canSignin: true,
+            canForgotPassword: true,
+            canResetPassword: true,
+            signupRemaining: 3,
+            signinRemaining: 5,
+            forgotPasswordRemaining: 3,
+            resetPasswordRemaining: 5,
+            error: 'Failed to check rate limits',
+        };
+    }
+}
+
+/**
+ * Gets rate limit status for a specific user's auth actions
+ * @param userId - User ID to check
+ * @returns Promise that resolves to user-specific rate limit status
+ */
+export async function getUserAuthRateLimitStatus(userId: string): Promise<{
+    canResendVerification: boolean;
+    canSetupTOTP: boolean;
+    canEnableTOTP: boolean;
+    resendVerificationRemaining: number;
+    totpSetupRemaining: number;
+    totpEnableRemaining: number;
+}> {
+    try {
+        const [
+            resendVerificationCheck,
+            totpSetupCheck,
+            totpEnableCheck,
+        ] = await Promise.all([
+            rateLimit(userId, { windowMs: 60 * 60 * 1000, maxRequests: 3, namespace: 'resend-verification' }),
+            rateLimit(userId, { windowMs: 60 * 60 * 1000, maxRequests: 5, namespace: 'totp-setup' }),
+            rateLimit(userId, { windowMs: 60 * 60 * 1000, maxRequests: 10, namespace: 'totp-enable' }),
+        ]);
+
+        return {
+            canResendVerification: resendVerificationCheck.success,
+            canSetupTOTP: totpSetupCheck.success,
+            canEnableTOTP: totpEnableCheck.success,
+            resendVerificationRemaining: resendVerificationCheck.remaining,
+            totpSetupRemaining: totpSetupCheck.remaining,
+            totpEnableRemaining: totpEnableCheck.remaining,
+        };
+    } catch (error) {
+        console.error('Get user auth rate limit status error:', error);
+        return {
+            canResendVerification: true, // Fail open
+            canSetupTOTP: true,
+            canEnableTOTP: true,
+            resendVerificationRemaining: 3,
+            totpSetupRemaining: 5,
+            totpEnableRemaining: 10,
         };
     }
 }

@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { safeDeleteSessions } from '@/lib/db-utils';
 import { UserRole } from './types';
 import type { SessionPayload, PublicUser, RequiredRole, AuthorizationResult, RoleGuardOptions } from './types';
 
@@ -111,9 +112,12 @@ export async function deleteSession(): Promise<void> {
 
     if (token) {
         // Remove from database
-        await prisma.session.deleteMany({
-            where: { token },
-        });
+        try {
+            await safeDeleteSessions({ token });
+        } catch (error) {
+            console.error('Error deleting session:', error);
+            // Continue execution even if session deletion fails
+        }
     }
 
     // Remove cookie

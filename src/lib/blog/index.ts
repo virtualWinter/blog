@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { getSession, requireAdmin } from '@/lib/auth';
 import { createPostSchema, updatePostSchema, createCommentSchema, updateCommentSchema } from './schema';
 import { prisma } from '@/lib/prisma';
+import { rateLimit } from '@/lib/rate-limit';
+import { getClientIP } from '@/lib/rate-limit/utils';
 import type {
     CreatePostResult,
     UpdatePostResult,
@@ -358,6 +360,33 @@ export async function createComment(formData: FormData): Promise<CreateCommentRe
             };
         }
 
+        // Rate limit comment creation: 5 comments per 15 minutes per user
+        const userRateLimitResult = await rateLimit(session.userId, {
+            windowMs: 15 * 60 * 1000, // 15 minutes
+            maxRequests: 5,
+            namespace: 'comment-create-user',
+        });
+
+        if (!userRateLimitResult.success) {
+            return {
+                error: formatRateLimitError(userRateLimitResult.retryAfter, 'comment'),
+            };
+        }
+
+        // Additional IP-based rate limiting: 10 comments per 15 minutes per IP
+        const clientIP = await getClientIP();
+        const ipRateLimitResult = await rateLimit(clientIP, {
+            windowMs: 15 * 60 * 1000, // 15 minutes
+            maxRequests: 10,
+            namespace: 'comment-create-ip',
+        });
+
+        if (!ipRateLimitResult.success) {
+            return {
+                error: formatRateLimitError(ipRateLimitResult.retryAfter, 'comment from this location'),
+            };
+        }
+
         const { postId, content } = result.data;
 
         // Check if post exists and is published
@@ -409,6 +438,12 @@ export async function createComment(formData: FormData): Promise<CreateCommentRe
             success: true,
             message: 'Comment added successfully!',
             comment: comment as PublicComment,
+            rateLimitInfo: {
+                userRemaining: userRateLimitResult.remaining,
+                userResetTime: userRateLimitResult.resetTime,
+                ipRemaining: ipRateLimitResult.remaining,
+                ipResetTime: ipRateLimitResult.resetTime,
+            },
         };
     } catch (error) {
         console.error('Create comment error:', error);
@@ -441,6 +476,33 @@ export async function updateComment(formData: FormData): Promise<UpdateCommentRe
         if (!session) {
             return {
                 error: 'You must be signed in to update comments.',
+            };
+        }
+
+        // Rate limit comment updates: 10 updates per 15 minutes per user
+        const userRateLimitResult = await rateLimit(session.userId, {
+            windowMs: 15 * 60 * 1000, // 15 minutes
+            maxRequests: 10,
+            namespace: 'comment-update-user',
+        });
+
+        if (!userRateLimitResult.success) {
+            return {
+                error: formatRateLimitError(userRateLimitResult.retryAfter, 'comment update'),
+            };
+        }
+
+        // Additional IP-based rate limiting: 15 updates per 15 minutes per IP
+        const clientIP = await getClientIP();
+        const ipRateLimitResult = await rateLimit(clientIP, {
+            windowMs: 15 * 60 * 1000, // 15 minutes
+            maxRequests: 15,
+            namespace: 'comment-update-ip',
+        });
+
+        if (!ipRateLimitResult.success) {
+            return {
+                error: formatRateLimitError(ipRateLimitResult.retryAfter, 'comment update from this location'),
             };
         }
 
@@ -491,6 +553,12 @@ export async function updateComment(formData: FormData): Promise<UpdateCommentRe
             success: true,
             message: 'Comment updated successfully!',
             comment: comment as PublicComment,
+            rateLimitInfo: {
+                userRemaining: userRateLimitResult.remaining,
+                userResetTime: userRateLimitResult.resetTime,
+                ipRemaining: ipRateLimitResult.remaining,
+                ipResetTime: ipRateLimitResult.resetTime,
+            },
         };
     } catch (error) {
         console.error('Update comment error:', error);
@@ -512,6 +580,33 @@ export async function deleteComment(commentId: string): Promise<DeleteCommentRes
         if (!session) {
             return {
                 error: 'You must be signed in to delete comments.',
+            };
+        }
+
+        // Rate limit comment deletions: 5 deletions per 15 minutes per user
+        const userRateLimitResult = await rateLimit(session.userId, {
+            windowMs: 15 * 60 * 1000, // 15 minutes
+            maxRequests: 5,
+            namespace: 'comment-delete-user',
+        });
+
+        if (!userRateLimitResult.success) {
+            return {
+                error: formatRateLimitError(userRateLimitResult.retryAfter, 'comment deletion'),
+            };
+        }
+
+        // Additional IP-based rate limiting: 8 deletions per 15 minutes per IP
+        const clientIP = await getClientIP();
+        const ipRateLimitResult = await rateLimit(clientIP, {
+            windowMs: 15 * 60 * 1000, // 15 minutes
+            maxRequests: 8,
+            namespace: 'comment-delete-ip',
+        });
+
+        if (!ipRateLimitResult.success) {
+            return {
+                error: formatRateLimitError(ipRateLimitResult.retryAfter, 'comment deletion from this location'),
             };
         }
 
@@ -585,6 +680,112 @@ export async function getCommentsByPostId(postId: string): Promise<{ comments?: 
         console.error('Get comments by post ID error:', error);
         return {
             error: 'Something went wrong. Please try again.',
+        };
+    }
+}
+
+/**
+ * Checks comment rate limits for the current user without incrementing counters
+ * @returns Promise that resolves to rate limit status
+ */
+export async function checkCommentRateLimits(): Promise<{
+    canComment: boolean;
+    canUpdate: boolean;
+    canDelete: boolean;
+    userCommentRemaining: number;
+    userUpdateRemaining: number;
+    userDeleteRemaining: number;
+    ipCommentRemaining: number;
+    ipUpdateRemaining: number;
+    ipDeleteRemaining: number;
+    error?: string;
+}> {
+    try {
+        const session = await getSession();
+        if (!session) {
+            return {
+                canComment: false,
+                canUpdate: false,
+                canDelete: false,
+                userCommentRemaining: 0,
+                userUpdateRemaining: 0,
+                userDeleteRemaining: 0,
+                ipCommentRemaining: 0,
+                ipUpdateRemaining: 0,
+                ipDeleteRemaining: 0,
+                error: 'Authentication required',
+            };
+        }
+
+        const clientIP = await getClientIP();
+
+        // Check all rate limits without incrementing
+        const [
+            userCommentLimit,
+            userUpdateLimit,
+            userDeleteLimit,
+            ipCommentLimit,
+            ipUpdateLimit,
+            ipDeleteLimit,
+        ] = await Promise.all([
+            // User-based limits
+            rateLimit(session.userId, {
+                windowMs: 15 * 60 * 1000,
+                maxRequests: 5,
+                namespace: 'comment-create-user',
+            }),
+            rateLimit(session.userId, {
+                windowMs: 15 * 60 * 1000,
+                maxRequests: 10,
+                namespace: 'comment-update-user',
+            }),
+            rateLimit(session.userId, {
+                windowMs: 15 * 60 * 1000,
+                maxRequests: 5,
+                namespace: 'comment-delete-user',
+            }),
+            // IP-based limits
+            rateLimit(clientIP, {
+                windowMs: 15 * 60 * 1000,
+                maxRequests: 10,
+                namespace: 'comment-create-ip',
+            }),
+            rateLimit(clientIP, {
+                windowMs: 15 * 60 * 1000,
+                maxRequests: 15,
+                namespace: 'comment-update-ip',
+            }),
+            rateLimit(clientIP, {
+                windowMs: 15 * 60 * 1000,
+                maxRequests: 8,
+                namespace: 'comment-delete-ip',
+            }),
+        ]);
+
+        return {
+            canComment: userCommentLimit.success && ipCommentLimit.success,
+            canUpdate: userUpdateLimit.success && ipUpdateLimit.success,
+            canDelete: userDeleteLimit.success && ipDeleteLimit.success,
+            userCommentRemaining: userCommentLimit.remaining,
+            userUpdateRemaining: userUpdateLimit.remaining,
+            userDeleteRemaining: userDeleteLimit.remaining,
+            ipCommentRemaining: ipCommentLimit.remaining,
+            ipUpdateRemaining: ipUpdateLimit.remaining,
+            ipDeleteRemaining: ipDeleteLimit.remaining,
+        };
+    } catch (error) {
+        console.error('Check comment rate limits error:', error);
+        return {
+            canComment: true, // Fail open
+            canUpdate: true,
+            canDelete: true,
+            userCommentRemaining: 5,
+            userUpdateRemaining: 10,
+            userDeleteRemaining: 5,
+            ipCommentRemaining: 10,
+            ipUpdateRemaining: 15,
+            ipDeleteRemaining: 8,
+            error: 'Failed to check rate limits',
         };
     }
 }
@@ -693,6 +894,68 @@ export async function getUnpublishedPosts(): Promise<{ posts?: PublicPost[]; err
     }
 }
 
-// Note: Import specific modules directly:
-// - Types: import { ... } from '@/lib/blog/types'
-// - Schemas: import { ... } from '@/lib/blog/schema'
+/**
+ * Formats a rate limit error message with time remaining
+ * @param retryAfter - Seconds until retry is allowed
+ * @param action - The action being rate limited
+ * @returns Formatted error message
+ */
+function formatRateLimitError(retryAfter: number, action: string): string {
+    const minutes = Math.ceil(retryAfter / 60);
+    const seconds = retryAfter % 60;
+    
+    if (minutes > 0) {
+        return `Too many ${action}s. Please wait ${minutes} minute${minutes > 1 ? 's' : ''} before trying again.`;
+    } else {
+        return `Too many ${action}s. Please wait ${seconds} second${seconds > 1 ? 's' : ''} before trying again.`;
+    }
+}
+
+/**
+ * Gets rate limit status for comment actions
+ * @param userId - User ID to check
+ * @param clientIP - Client IP to check
+ * @returns Promise that resolves to rate limit status
+ */
+export async function getCommentRateLimitStatus(userId: string, clientIP: string): Promise<{
+    comment: { user: boolean; ip: boolean; userRemaining: number; ipRemaining: number };
+    update: { user: boolean; ip: boolean; userRemaining: number; ipRemaining: number };
+    delete: { user: boolean; ip: boolean; userRemaining: number; ipRemaining: number };
+}> {
+    const [
+        userCommentCheck,
+        userUpdateCheck,
+        userDeleteCheck,
+        ipCommentCheck,
+        ipUpdateCheck,
+        ipDeleteCheck,
+    ] = await Promise.all([
+        rateLimit(userId, { windowMs: 15 * 60 * 1000, maxRequests: 5, namespace: 'comment-create-user' }),
+        rateLimit(userId, { windowMs: 15 * 60 * 1000, maxRequests: 10, namespace: 'comment-update-user' }),
+        rateLimit(userId, { windowMs: 15 * 60 * 1000, maxRequests: 5, namespace: 'comment-delete-user' }),
+        rateLimit(clientIP, { windowMs: 15 * 60 * 1000, maxRequests: 10, namespace: 'comment-create-ip' }),
+        rateLimit(clientIP, { windowMs: 15 * 60 * 1000, maxRequests: 15, namespace: 'comment-update-ip' }),
+        rateLimit(clientIP, { windowMs: 15 * 60 * 1000, maxRequests: 8, namespace: 'comment-delete-ip' }),
+    ]);
+
+    return {
+        comment: {
+            user: userCommentCheck.success,
+            ip: ipCommentCheck.success,
+            userRemaining: userCommentCheck.remaining,
+            ipRemaining: ipCommentCheck.remaining,
+        },
+        update: {
+            user: userUpdateCheck.success,
+            ip: ipUpdateCheck.success,
+            userRemaining: userUpdateCheck.remaining,
+            ipRemaining: ipUpdateCheck.remaining,
+        },
+        delete: {
+            user: userDeleteCheck.success,
+            ip: ipDeleteCheck.success,
+            userRemaining: userDeleteCheck.remaining,
+            ipRemaining: ipDeleteCheck.remaining,
+        },
+    };
+}

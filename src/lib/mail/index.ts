@@ -247,8 +247,3 @@ export async function sendNotificationEmail(
         ...(isHtml ? { html: message } : { text: message }),
     });
 }
-
-// Note: Import specific modules directly:
-// - Types: import { ... } from '@/lib/mail/types'
-// - Templates: import { emailTemplates } from '@/lib/mail/templates'
-// - Schemas: import { emailSchema } from '@/lib/mail/schema'

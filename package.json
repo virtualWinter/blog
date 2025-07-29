@@ -15,7 +15,8 @@
     "db:push": "pnpm prisma db push",
     "db:migrate": "pnpm prisma migrate dev",
     "db:studio": "pnpm prisma studio",
-    "db:seed": "pnpm prisma db seed"
+    "db:seed": "pnpm prisma db seed",
+    "db:reset-connections": "node scripts/reset-db-connections.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.0",

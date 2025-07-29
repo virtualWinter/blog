@@ -1,7 +1,15 @@
+export interface RateLimitInfo {
+    userRemaining: number;
+    userResetTime: number;
+    ipRemaining: number;
+    ipResetTime: number;
+}
+
 export interface BlogActionResult {
     success?: boolean;
     error?: string;
     message?: string;
+    rateLimitInfo?: RateLimitInfo;
 }
 
 export interface PublicUser {
