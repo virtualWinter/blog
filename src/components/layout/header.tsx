@@ -13,13 +13,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { 
-  User, 
-  Settings, 
-  LogOut, 
+import {
+  User,
+  Settings,
+  LogOut,
   Shield,
   Menu
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { AuthenticatedOnly } from '@/components/auth/role-guard';
 import { getCurrentUserClient } from '@/lib/auth/client';
 import { signOut } from '@/lib/auth/actions';
@@ -91,7 +92,7 @@ export function Header() {
           <div className="flex items-center justify-start gap-2 p-2">
             <div className="flex flex-col space-y-1 leading-none">
               <p className="font-medium">{user.name || 'User'}</p>
-              <p className="text-xs text-gray-500">{user.email}</p>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
               <div className="flex items-center gap-1">
                 {user.role === 'ADMIN' && (
                   <Badge variant="outline" className="text-xs">
@@ -116,7 +117,7 @@ export function Header() {
               </Link>
             </DropdownMenuItem>
           </AuthenticatedOnly>
-          
+
           <DropdownMenuItem asChild>
             <Link href="/profile">
               <User className="mr-2 h-4 w-4" />
@@ -141,21 +142,23 @@ export function Header() {
   };
 
   return (
-    <header className="border-b border-gray-100">
+    <header className="border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="font-medium text-gray-900">
+          <Link href="/" className="font-medium">
             vWinter's smol portfolio
           </Link>
 
           {/* Desktop User Menu */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center gap-2">
+            <ThemeToggle />
             <UserMenu />
           </div>
 
           {/* Mobile Menu */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="sm">
@@ -167,7 +170,7 @@ export function Header() {
                   {/* User info for mobile */}
                   <AuthenticatedOnly>
                     {user && (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                         <Avatar className="h-10 w-10">
                           <AvatarFallback>
                             {userInitials}
@@ -175,7 +178,7 @@ export function Header() {
                         </Avatar>
                         <div className="flex-1">
                           <p className="font-medium">{user.name || 'User'}</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
                           {user.role === 'ADMIN' && (
                             <Badge variant="outline" className="text-xs mt-1">
                               Admin
@@ -188,34 +191,34 @@ export function Header() {
 
                   {/* Navigation links */}
                   <nav className="flex flex-col space-y-2">
-                    <Link 
-                      href="/blog" 
-                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                    <Link
+                      href="/blog"
+                      className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                     >
                       Blog
                     </Link>
-                    <Link 
-                      href="mailto:hello@example.com" 
-                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                    <Link
+                      href="mailto:hello@example.com"
+                      className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                     >
                       Contact
                     </Link>
                     <AuthenticatedOnly>
-                      <Link 
-                        href="/dashboard" 
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                      <Link
+                        href="/dashboard"
+                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                       >
                         Dashboard
                       </Link>
-                      <Link 
-                        href="/profile" 
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                      <Link
+                        href="/profile"
+                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                       >
                         Profile
                       </Link>
-                      <Link 
-                        href="/settings" 
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                      <Link
+                        href="/settings"
+                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                       >
                         Settings
                       </Link>
@@ -224,7 +227,7 @@ export function Header() {
 
                   {/* Auth buttons for mobile */}
                   <div className="pt-4 border-t">
-                    <AuthenticatedOnly 
+                    <AuthenticatedOnly
                       fallback={
                         <div className="flex flex-col gap-2">
                           <Button asChild>
@@ -236,8 +239,8 @@ export function Header() {
                         </div>
                       }
                     >
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={handleSignOut}
                         className="w-full"
                       >

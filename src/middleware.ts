@@ -14,11 +14,16 @@ export async function middleware(request: NextRequest) {
   // Check if user has a valid session and get user data
   let isAuthenticated = false
   let userRole = null
+  
   if (sessionCookie) {
     try {
       const { payload } = await jwtVerify(sessionCookie.value, JWT_SECRET)
       isAuthenticated = true
-      userRole = payload.role as string
+      
+      // The JWT only contains userId, we need to get role from database
+      // For now, let's simplify and just check if they have a valid session
+      // The role check will be done in the layout/page components
+      
     } catch {
       // Invalid token
       isAuthenticated = false
@@ -35,12 +40,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/signin', request.url))
   }
 
-  // Check admin access for admin routes
-  if (isAuthenticated && adminRoutes.some(route => pathname.startsWith(route))) {
-    if (userRole !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/auth/signin', request.url))
-    }
-  }
+  // For admin routes, we'll let the layout handle the admin check
+  // since it has access to the full user data from the database
 
   return NextResponse.next()
 }

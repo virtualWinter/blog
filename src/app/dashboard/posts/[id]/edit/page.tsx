@@ -1,8 +1,6 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { EditPostForm } from '@/components/blog';
-import { Container } from '@/components/layout';
 import { getPostById } from '@/lib/blog';
-import { requireAdmin } from '@/lib/auth';
 
 interface DashboardEditPostPageProps {
   params: Promise<{
@@ -11,11 +9,7 @@ interface DashboardEditPostPageProps {
 }
 
 export default async function DashboardEditPostPage({ params }: DashboardEditPostPageProps) {
-  // Check admin authorization
-  const authResult = await requireAdmin();
-  if (!authResult.authorized) {
-    redirect('/auth/signin');
-  }
+  // User authorization is handled by the layout
 
   const { id } = await params;
   const result = await getPostById(id);
@@ -25,15 +19,15 @@ export default async function DashboardEditPostPage({ params }: DashboardEditPos
   }
 
   return (
-    <Container size="md">
-      <div className="py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Edit Post</h1>
-          <p className="text-gray-600">Update your blog post</p>
-        </div>
-        
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">Edit Post</h2>
+        <p className="text-muted-foreground">Update your blog post</p>
+      </div>
+      
+      <div className="max-w-4xl">
         <EditPostForm post={result.post} />
       </div>
-    </Container>
+    </div>
   );
 }

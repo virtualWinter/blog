@@ -1,25 +1,18 @@
-import { redirect } from 'next/navigation';
 import { CreatePostForm } from '@/components/blog';
-import { Container } from '@/components/layout';
-import { requireAdmin } from '@/lib/auth';
 
 export default async function DashboardCreatePostPage() {
-  // Check admin authorization
-  const authResult = await requireAdmin();
-  if (!authResult.authorized) {
-    redirect('/auth/signin');
-  }
+  // User authorization is handled by the layout
 
   return (
-    <Container size="md">
-      <div className="py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Create New Post</h1>
-          <p className="text-gray-600">Write and publish a new blog post</p>
-        </div>
-        
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">Create New Post</h2>
+        <p className="text-muted-foreground">Write and publish a new blog post</p>
+      </div>
+      
+      <div className="max-w-4xl">
         <CreatePostForm />
       </div>
-    </Container>
+    </div>
   );
 }

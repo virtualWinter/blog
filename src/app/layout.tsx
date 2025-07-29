@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { MainLayout } from "@/components/layout";
+import { Providers } from "@/components/providers";
 import "./globals.css";
 import { Provider } from "@radix-ui/react-tooltip";
 
@@ -25,15 +26,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Provider>
-          <MainLayout>
-            {children}
-          </MainLayout>
-        </Provider>
+        <Providers>
+          <Provider>
+            <MainLayout>
+              {children}
+            </MainLayout>
+          </Provider>
+        </Providers>
       </body>
     </html>
   );
