@@ -43,7 +43,7 @@ import {
     demoteUserFromAdmin,
     deleteUser
 } from '@/lib/auth/actions';
-import type { PublicUser, UserRole } from '@/lib/auth/types';
+import { PublicUser, UserRole } from '@/lib/auth/types';
 
 interface AdminUsersProps {
     users: PublicUser[];
