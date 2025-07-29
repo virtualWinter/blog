@@ -82,9 +82,9 @@ export function EditPostForm({ post }: EditPostFormProps) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="h-full flex flex-col space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-shrink-0 pb-4 border-b">
         <div className="flex items-center gap-4">
           <Button variant="ghost" asChild>
             <Link href="/dashboard/posts">
@@ -118,7 +118,7 @@ export function EditPostForm({ post }: EditPostFormProps) {
       </div>
 
       {/* Post Info */}
-      <Card className="bg-muted/30">
+      <Card className="bg-muted/30 flex-shrink-0">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -146,42 +146,38 @@ export function EditPostForm({ post }: EditPostFormProps) {
         </CardContent>
       </Card>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Edit className="h-5 w-5" />
-              Post Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Title */}
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-base font-medium">Title</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter post title"
-                required
-                disabled={isLoading}
-                className="text-lg h-12"
-              />
-            </div>
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-4">
+        <div className="flex-1 flex flex-col space-y-4">
+          {/* Title */}
+          <div className="space-y-2 flex-shrink-0">
+            <Label htmlFor="title" className="text-base font-medium">Title</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter post title"
+              required
+              disabled={isLoading}
+              className="text-lg h-12"
+            />
+          </div>
 
-            {/* Content */}
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Content</Label>
+          {/* Content - This should take up most of the space */}
+          <div className="flex-1 flex flex-col space-y-2 min-h-0">
+            <Label className="text-base font-medium">Content</Label>
+            <div className="flex-1">
               <RichTextEditor
                 value={content}
                 onChange={setContent}
                 placeholder="Write your post content here..."
                 disabled={isLoading}
-                rows={25}
+                rows={30}
               />
             </div>
+          </div>
 
-            {/* Publishing Options */}
+          {/* Publishing Options */}
+          <div className="flex-shrink-0 space-y-4">
             <Card className="bg-muted/50">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -222,7 +218,7 @@ export function EditPostForm({ post }: EditPostFormProps) {
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3">
               <Button 
                 type="submit" 
                 disabled={isLoading || !title.trim() || !content.trim()}
@@ -251,8 +247,8 @@ export function EditPostForm({ post }: EditPostFormProps) {
                 Cancel
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </form>
     </div>
   );

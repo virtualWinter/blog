@@ -85,9 +85,9 @@ export function RichTextEditor({
   }
 
   return (
-    <div className="space-y-4">
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'write' | 'preview')}>
-        <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full space-y-4">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'write' | 'preview')} className="flex flex-col h-full">
+        <div className="flex items-center justify-between flex-shrink-0">
           <TabsList>
             <TabsTrigger value="write" className="flex items-center gap-2">
               <Edit className="h-4 w-4" />
@@ -100,9 +100,9 @@ export function RichTextEditor({
           </TabsList>
         </div>
 
-        <TabsContent value="write" className="space-y-4">
+        <TabsContent value="write" className="flex flex-col flex-1 space-y-4 mt-4">
           {/* Toolbar */}
-          <Card>
+          <Card className="flex-shrink-0">
             <CardContent className="p-3">
               <div className="flex flex-wrap gap-1">
                 <Button
@@ -228,14 +228,14 @@ export function RichTextEditor({
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
-            rows={rows}
-            className="font-mono text-sm resize-none"
+            className="font-mono text-sm resize-none flex-1 min-h-0"
+            style={{ minHeight: '400px' }}
           />
         </TabsContent>
 
-        <TabsContent value="preview">
-          <Card>
-            <CardContent className="p-6 min-h-[400px]">
+        <TabsContent value="preview" className="flex-1 mt-4">
+          <Card className="h-full">
+            <CardContent className="p-6 h-full overflow-y-auto">
               {value ? (
                 <div 
                   className="prose prose-sm max-w-none"
