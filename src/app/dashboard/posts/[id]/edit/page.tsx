@@ -18,16 +18,5 @@ export default async function DashboardEditPostPage({ params }: DashboardEditPos
     notFound();
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Edit Post</h2>
-        <p className="text-muted-foreground">Update your blog post</p>
-      </div>
-      
-      <div className="max-w-4xl">
-        <EditPostForm post={result.post} />
-      </div>
-    </div>
-  );
+  return <EditPostForm post={result.post} />;
 }

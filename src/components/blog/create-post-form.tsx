@@ -5,25 +5,32 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { createPost } from '@/lib/blog';
+import { ArrowLeft, Save, Eye, Edit } from 'lucide-react';
+import Link from 'next/link';
 
 export function CreatePostForm() {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [published, setPublished] = useState(false);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const router = useRouter();
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setIsLoading(true);
     setError('');
     setSuccess('');
 
-    // Ensure the published state is correctly set in form data
+    const formData = new FormData();
+    formData.set('title', title);
+    formData.set('content', content);
     formData.set('published', published.toString());
 
     const result = await createPost(formData);
@@ -34,10 +41,6 @@ export function CreatePostForm() {
     } else {
       setSuccess(result.message || 'Post created successfully!');
       setIsLoading(false);
-      // Reset form
-      const form = document.getElementById('create-post-form') as HTMLFormElement;
-      form?.reset();
-      setPublished(false);
       // Redirect to dashboard posts after creation
       if (result.post) {
         setTimeout(() => {
@@ -47,65 +50,168 @@ export function CreatePostForm() {
     }
   }
 
+  const handleSaveDraft = async () => {
+    const originalPublished = published;
+    setPublished(false);
+    
+    const formData = new FormData();
+    formData.set('title', title || 'Untitled Draft');
+    formData.set('content', content || 'Draft content...');
+    formData.set('published', 'false');
+
+    setIsLoading(true);
+    const result = await createPost(formData);
+    
+    if (result.error) {
+      setError(result.error);
+      setPublished(originalPublished);
+    } else {
+      setSuccess('Draft saved successfully!');
+      setTimeout(() => {
+        router.push('/dashboard/posts');
+      }, 1000);
+    }
+    setIsLoading(false);
+  };
+
   return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>Create New Post</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form id="create-post-form" action={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              name="title"
-              type="text"
-              placeholder="Enter post title"
-              required
-              disabled={isLoading}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
-            <Textarea
-              id="content"
-              name="content"
-              placeholder="Write your post content here..."
-              rows={10}
-              required
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="published"
-              name="published"
-              checked={published}
-              onCheckedChange={setPublished}
-              disabled={isLoading}
-            />
-            <Label htmlFor="published">Publish immediately</Label>
-          </div>
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {success && (
-            <Alert>
-              <AlertDescription>{success}</AlertDescription>
-            </Alert>
-          )}
-
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Creating post...' : 'Create Post'}
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" asChild>
+            <Link href="/dashboard/posts">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Posts
+            </Link>
           </Button>
-        </form>
-      </CardContent>
-    </Card>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Create New Post</h1>
+            <p className="text-muted-foreground">Write and publish a new blog post</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSaveDraft}
+            disabled={isLoading || !title.trim()}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Draft
+          </Button>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
+              Post Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Title */}
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-base font-medium">Title</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter an engaging post title..."
+                required
+                disabled={isLoading}
+                className="text-lg h-12"
+              />
+            </div>
+
+            {/* Content */}
+            <div className="space-y-2">
+              <Label className="text-base font-medium">Content</Label>
+              <RichTextEditor
+                value={content}
+                onChange={setContent}
+                placeholder="Start writing your post content here..."
+                disabled={isLoading}
+                rows={25}
+              />
+            </div>
+
+            {/* Publishing Options */}
+            <Card className="bg-muted/50">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="published"
+                        checked={published}
+                        onCheckedChange={setPublished}
+                        disabled={isLoading}
+                      />
+                      <Label htmlFor="published" className="font-medium">
+                        Publish immediately
+                      </Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {published 
+                        ? "Post will be visible to all visitors" 
+                        : "Post will be saved as a draft"
+                      }
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Alerts */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {success && (
+              <Alert>
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4">
+              <Button 
+                type="submit" 
+                disabled={isLoading || !title.trim() || !content.trim()}
+                className="flex-1"
+              >
+                {isLoading ? (
+                  'Creating...'
+                ) : published ? (
+                  <>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Publish Post
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Draft
+                  </>
+                )}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => router.back()}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </form>
+    </div>
   );
 }

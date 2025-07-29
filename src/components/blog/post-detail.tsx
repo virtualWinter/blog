@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import { Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { AdminOnly } from '@/components/auth/role-guard';
 import { CommentForm } from './comment-form';
@@ -121,11 +122,10 @@ export function PostDetail({ post }: PostDetailProps) {
         </CardHeader>
         
         <CardContent>
-          <div className="prose max-w-none">
-            <div className="whitespace-pre-wrap text-foreground leading-relaxed">
-              {post.content}
-            </div>
-          </div>
+          <MarkdownRenderer 
+            content={post.content}
+            className="max-w-none"
+          />
           
           {error && (
             <Alert variant="destructive" className="mt-4">
