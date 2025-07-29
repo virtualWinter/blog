@@ -78,9 +78,9 @@ export function PostDetail({ post }: PostDetailProps) {
                 )}
               </div>
               
-              <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
+              <h1 className="text-3xl font-bold mb-4 text-foreground">{post.title}</h1>
               
-              <div className="flex items-center gap-3 text-sm text-gray-600">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="text-sm">
@@ -122,7 +122,7 @@ export function PostDetail({ post }: PostDetailProps) {
         
         <CardContent>
           <div className="prose max-w-none">
-            <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+            <div className="whitespace-pre-wrap text-foreground leading-relaxed">
               {post.content}
             </div>
           </div>

@@ -58,7 +58,7 @@ export function PostCard({ post, showActions = false }: PostCardProps) {
             <CardTitle className="text-xl">
               <Link 
                 href={`/blog/${post.id}`}
-                className="hover:text-blue-600 transition-colors"
+                className="hover:text-primary transition-colors"
               >
                 {post.title}
               </Link>
@@ -89,12 +89,12 @@ export function PostCard({ post, showActions = false }: PostCardProps) {
       
       <CardContent>
         <div className="space-y-4">
-          <p className="text-gray-600 line-clamp-3">
+          <p className="text-muted-foreground line-clamp-3">
             {post.content.substring(0, 200)}
             {post.content.length > 200 && '...'}
           </p>
           
-          <div className="flex items-center justify-between text-sm text-gray-500">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Avatar className="h-6 w-6">
                 <AvatarFallback className="text-xs">

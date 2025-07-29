@@ -80,7 +80,7 @@ export function PostList({
     <div className="space-y-6">
       {showActions && (
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">
+          <h2 className="text-2xl font-bold text-foreground">
             {includeUnpublished ? 'All Posts' : 'Published Posts'}
           </h2>
           <AdminOnly>
@@ -96,7 +96,7 @@ export function PostList({
 
       {posts.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">No posts found.</p>
+          <p className="text-muted-foreground mb-4">No posts found.</p>
           <AdminOnly>
             <Button asChild>
               <Link href="/dashboard/posts/create">

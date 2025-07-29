@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Edit, Trash2 } from 'lucide-react';
@@ -119,12 +120,12 @@ export function CommentList({ postId, initialComments, refreshTrigger }: Comment
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">
+      <h3 className="text-lg font-semibold text-foreground">
         Comments ({comments.length})
       </h3>
 
       {comments.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">
+        <p className="text-muted-foreground text-center py-8">
           No comments yet. Be the first to comment!
         </p>
       ) : (
@@ -157,16 +158,16 @@ export function CommentList({ postId, initialComments, refreshTrigger }: Comment
                             {comment.author.name || comment.author.email}
                           </span>
                           {comment.author.role === 'ADMIN' && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            <Badge variant="outline" className="text-xs">
                               Admin
-                            </span>
+                            </Badge>
                           )}
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                           </span>
                         </div>
 
-                        <p className="text-gray-700 whitespace-pre-wrap">
+                        <p className="text-foreground whitespace-pre-wrap">
                           {comment.content}
                         </p>
 

@@ -8,8 +8,8 @@ export default async function BlogPage() {
   return (
     <Container size="md">
       <div className="mb-12">
-        <h1 className="text-3xl font-bold mb-2">Blog</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold mb-2 text-foreground">Blog</h1>
+        <p className="text-muted-foreground">
           Thoughts on development and technology.
         </p>
       </div>
