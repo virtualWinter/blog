@@ -242,7 +242,6 @@ export async function getAnalyticsDashboardStats(
                 where: {
                     type: 'page_view',
                     createdAt: { gte: startDate },
-                    path: { not: null },
                     ...getDashboardExclusionFilter(),
                 },
                 _count: { path: true },
@@ -482,7 +481,6 @@ export async function getSiteAnalytics(
                 where: {
                     type: 'page_view',
                     createdAt: { gte: startDate },
-                    path: { not: null },
                     ...getDashboardExclusionFilter(),
                 },
                 _count: { path: true },
@@ -579,7 +577,6 @@ export async function getRealTimeAnalytics(): Promise<AnalyticsResult<RealTimeAn
                 where: {
                     type: 'page_view',
                     createdAt: { gte: fiveMinutesAgo },
-                    path: { not: null },
                     ...getDashboardExclusionFilter(),
                 },
                 _count: { path: true },
@@ -635,11 +632,10 @@ export async function getRealTimeAnalytics(): Promise<AnalyticsResult<RealTimeAn
  */
 function getDashboardExclusionFilter() {
     return {
-        path: {
-            not: {
-                startsWith: '/dashboard'
-            }
-        }
+        AND: [
+            { path: { not: null } },
+            { path: { not: { startsWith: '/dashboard' } } }
+        ]
     };
 }
 
