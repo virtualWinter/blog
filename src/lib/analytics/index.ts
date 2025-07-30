@@ -1,28 +1,20 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { getSession, requireAdmin } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { rateLimit } from '@/lib/rate-limit';
 import { getClientIP } from '@/lib/rate-limit/utils';
-import { trackEventSchema, trackPageViewSchema, trackPostViewSchema, analyticsQuerySchema } from './schema';
+import { trackEventSchema, trackPageViewSchema, trackPostViewSchema } from './schema';
 import type {
-    AnalyticsEvent,
     AnalyticsEventType,
     PageViewData,
     PostAnalytics,
-    UserAnalytics,
     SiteAnalytics,
     AnalyticsDashboardStats,
     RealTimeAnalytics,
-    AnalyticsQueryOptions,
     AnalyticsTimeRange,
     TrackingResult,
-    AnalyticsResult,
-    AnalyticsSession,
-    AnalyticsFunnel,
-    AnalyticsCohort,
-    AnalyticsGoal
+    AnalyticsResult
 } from './types';
 
 /**
@@ -73,7 +65,7 @@ export async function trackEvent(eventData: {
                 sessionId,
                 path,
                 referrer,
-                userAgent: metadata?.userAgent,
+                userAgent: typeof metadata?.userAgent === 'string' ? metadata.userAgent : null,
                 ipAddress: clientIP,
                 metadata: metadata ? JSON.stringify(metadata) : null,
             },
@@ -271,7 +263,7 @@ export async function getAnalyticsDashboardStats(
 
         // Calculate previous period for growth metrics
         const previousStartDate = new Date(startDate.getTime() - (now.getTime() - startDate.getTime()));
-        
+
         const [
             previousPageViews,
             previousUsers,
@@ -298,14 +290,14 @@ export async function getAnalyticsDashboardStats(
         ]);
 
         // Calculate growth metrics
-        const pageViewsGrowth = previousPageViews > 0 
-            ? ((totalPageViews - previousPageViews) / previousPageViews) * 100 
+        const pageViewsGrowth = previousPageViews > 0
+            ? ((totalPageViews - previousPageViews) / previousPageViews) * 100
             : 0;
-        const usersGrowth = previousUsers > 0 
-            ? ((newUsers - previousUsers) / previousUsers) * 100 
+        const usersGrowth = previousUsers > 0
+            ? ((newUsers - previousUsers) / previousUsers) * 100
             : 0;
-        const sessionsGrowth = previousSessions > 0 
-            ? ((totalSessions - previousSessions) / previousSessions) * 100 
+        const sessionsGrowth = previousSessions > 0
+            ? ((totalSessions - previousSessions) / previousSessions) * 100
             : 0;
 
         // Calculate average session duration and bounce rate
@@ -634,7 +626,7 @@ export async function getRealTimeAnalytics(): Promise<AnalyticsResult<RealTimeAn
  */
 function getStartDateFromTimeRange(timeRange: AnalyticsTimeRange): Date {
     const now = new Date();
-    
+
     switch (timeRange) {
         case '24h':
             return new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -656,13 +648,13 @@ function getStartDateFromTimeRange(timeRange: AnalyticsTimeRange): Date {
  */
 function extractTitleFromPath(path: string | null): string | undefined {
     if (!path) return undefined;
-    
+
     // Simple title extraction logic
     if (path === '/') return 'Home';
     if (path.startsWith('/blog/')) return 'Blog Post';
     if (path === '/blog') return 'Blog';
     if (path === '/dashboard') return 'Dashboard';
-    
+
     return path.split('/').pop()?.replace(/-/g, ' ') || undefined;
 }
 

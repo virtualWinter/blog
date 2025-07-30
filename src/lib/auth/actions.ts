@@ -24,6 +24,7 @@ import { safeDeleteSessions, safeDbOperation } from '@/lib/db-utils';
 import { sendWelcomeEmail, sendPasswordResetEmail, sendEmailVerification } from '@/lib/mail';
 import { rateLimit } from '@/lib/rate-limit';
 import { getClientIP } from '@/lib/rate-limit/utils';
+import { trackEvent } from '@/lib/analytics';
 import crypto from 'crypto';
 import type {
     SignUpResult,
@@ -159,6 +160,22 @@ export async function signUp(formData: FormData): Promise<SignUpResult> {
         // Create session
         await createSession(user.id);
 
+        // Track signup event
+        try {
+            await trackEvent({
+                type: 'user_signup',
+                userId: user.id,
+                metadata: {
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                },
+            });
+        } catch (analyticsError) {
+            console.error('Failed to track signup event:', analyticsError);
+            // Don't fail the signup if analytics fails
+        }
+
         return {
             success: true,
             message: 'Account created successfully! Please check your email for verification.',
@@ -245,6 +262,21 @@ export async function signIn(formData: FormData): Promise<SignInResult & { requi
         if (!has2FA) {
             // No 2FA enabled, proceed with normal sign in
             await createSession(user.id);
+            
+            // Track signin event
+            try {
+                await trackEvent({
+                    type: 'user_signin',
+                    userId: user.id,
+                    metadata: {
+                        email: user.email,
+                        has2FA: false,
+                    },
+                });
+            } catch (analyticsError) {
+                console.error('Failed to track signin event:', analyticsError);
+            }
+            
             return { success: true };
         }
 
@@ -274,6 +306,23 @@ export async function signIn(formData: FormData): Promise<SignInResult & { requi
 
         // All verifications passed, create session
         await createSession(user.id);
+        
+        // Track signin event
+        try {
+            await trackEvent({
+                type: 'user_signin',
+                userId: user.id,
+                metadata: {
+                    email: user.email,
+                    has2FA: true,
+                    totpEnabled: user.totpEnabled,
+                    emailOtpEnabled: user.emailOtpEnabled,
+                },
+            });
+        } catch (analyticsError) {
+            console.error('Failed to track signin event:', analyticsError);
+        }
+        
         return { success: true };
     } catch (error) {
         console.error('Sign in error:', error);

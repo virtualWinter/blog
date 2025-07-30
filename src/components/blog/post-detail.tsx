@@ -13,6 +13,8 @@ import { Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { AdminOnly } from '@/components/auth/role-guard';
 import { CommentForm } from './comment-form';
 import { CommentList } from './comment-list';
+import { PostViewTracker } from '@/components/analytics/post-view-tracker';
+import { useSession } from '@/lib/auth/client';
 import { deletePost } from '@/lib/blog';
 import type { PublicPost } from '@/lib/blog/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -23,6 +25,7 @@ interface PostDetailProps {
 }
 
 export function PostDetail({ post }: PostDetailProps) {
+  const { user } = useSession();
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string>('');
   const [commentRefreshTrigger, setCommentRefreshTrigger] = useState(0);
@@ -57,6 +60,8 @@ export function PostDetail({ post }: PostDetailProps) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <PostViewTracker postId={post.id} userId={user?.id} />
+      
       {/* Back button */}
       <Button variant="ghost" asChild>
         <Link href="/blog">

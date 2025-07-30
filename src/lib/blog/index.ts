@@ -6,6 +6,7 @@ import { createPostSchema, updatePostSchema, createCommentSchema, updateCommentS
 import { prisma } from '@/lib/prisma';
 import { rateLimit } from '@/lib/rate-limit';
 import { getClientIP } from '@/lib/rate-limit/utils';
+import { trackEvent } from '@/lib/analytics';
 import type {
     CreatePostResult,
     UpdatePostResult,
@@ -433,6 +434,22 @@ export async function createComment(formData: FormData): Promise<CreateCommentRe
         });
 
         revalidatePath(`/blog/${postId}`);
+
+        // Track comment creation event
+        try {
+            await trackEvent({
+                type: 'comment_created',
+                userId: session.userId,
+                path: `/blog/${postId}`,
+                metadata: {
+                    postId,
+                    commentId: comment.id,
+                    contentLength: content.length,
+                },
+            });
+        } catch (analyticsError) {
+            console.error('Failed to track comment creation event:', analyticsError);
+        }
 
         return {
             success: true,
