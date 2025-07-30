@@ -169,3 +169,4 @@ export function needsProfileCompletion(user: PublicUser | null): boolean {
 export function has2FAEnabled(user: PublicUser | null): boolean {
     return isTotpEnabled(user) || isEmailOtpEnabled(user);
 }
+

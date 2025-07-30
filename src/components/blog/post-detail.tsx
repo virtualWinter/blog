@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { AdminOnly } from '@/components/auth/role-guard';
 import { CommentForm } from './comment-form';
 import { CommentList } from './comment-list';
 import { PostViewTracker } from '@/components/analytics/post-view-tracker';
-import { useSession } from '@/lib/auth/client';
+import { getCurrentUserClient } from '@/lib/auth/client';
 import { deletePost } from '@/lib/blog';
 import type { PublicPost } from '@/lib/blog/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -25,11 +25,24 @@ interface PostDetailProps {
 }
 
 export function PostDetail({ post }: PostDetailProps) {
-  const { user } = useSession();
+  const [userId, setUserId] = useState<string | undefined>();
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string>('');
   const [commentRefreshTrigger, setCommentRefreshTrigger] = useState(0);
   const router = useRouter();
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const user = await getCurrentUserClient();
+        setUserId(user?.id);
+      } catch (error) {
+        console.error('Failed to load user:', error);
+      }
+    }
+
+    loadUser();
+  }, []);
 
   async function handleDelete() {
     if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
@@ -60,7 +73,7 @@ export function PostDetail({ post }: PostDetailProps) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <PostViewTracker postId={post.id} userId={user?.id} />
+      <PostViewTracker postId={post.id} userId={userId} />
       
       {/* Back button */}
       <Button variant="ghost" asChild>

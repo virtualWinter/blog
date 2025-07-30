@@ -1,15 +1,26 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { trackPageView } from '@/lib/analytics/client';
+import { getCurrentUserClient } from '@/lib/auth/client';
 
-interface AnalyticsTrackerProps {
-  userId?: string;
-}
-
-export function AnalyticsTracker({ userId }: AnalyticsTrackerProps) {
+export function AnalyticsTracker() {
   const pathname = usePathname();
+  const [userId, setUserId] = useState<string | undefined>();
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const user = await getCurrentUserClient();
+        setUserId(user?.id);
+      } catch (error) {
+        console.error('Failed to load user for analytics:', error);
+      }
+    }
+
+    loadUser();
+  }, []);
 
   useEffect(() => {
     // Generate or get session ID
