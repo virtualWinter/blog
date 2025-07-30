@@ -107,7 +107,7 @@ export function PasswordForm() {
                 )}
               </Button>
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Password must be at least 8 characters long.
             </p>
           </div>
@@ -141,8 +141,8 @@ export function PasswordForm() {
           {message && (
             <div className={`p-3 rounded-md ${
               message.type === 'success' 
-                ? 'bg-green-50 text-green-800 border border-green-200' 
-                : 'bg-red-50 text-red-800 border border-red-200'
+                ? 'bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800' 
+                : 'bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800'
             }`}>
               {message.text}
             </div>

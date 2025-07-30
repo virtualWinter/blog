@@ -60,10 +60,10 @@ export function SecurityForm({ user }: SecurityFormProps) {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Smartphone className="h-5 w-5 text-gray-400" />
+              <Smartphone className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="font-medium">Two-Factor Authentication (TOTP)</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Use an authenticator app for additional security
                 </p>
               </div>
@@ -86,7 +86,7 @@ export function SecurityForm({ user }: SecurityFormProps) {
                     <DialogTitle>Disable Two-Factor Authentication</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Enter your password to disable two-factor authentication. This will make your account less secure.
                     </p>
                     
@@ -120,8 +120,8 @@ export function SecurityForm({ user }: SecurityFormProps) {
                       {message && (
                         <div className={`p-3 rounded-md ${
                           message.type === 'success' 
-                            ? 'bg-green-50 text-green-800 border border-green-200' 
-                            : 'bg-red-50 text-red-800 border border-red-200'
+                            ? 'bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800' 
+                            : 'bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800'
                         }`}>
                           {message.text}
                         </div>
@@ -168,7 +168,7 @@ export function SecurityForm({ user }: SecurityFormProps) {
         {/* Security Tips */}
         <div className="border-t pt-6">
           <h3 className="font-medium mb-3">Security Tips</h3>
-          <div className="space-y-2 text-sm text-gray-600">
+          <div className="space-y-2 text-sm text-muted-foreground">
             <p>• Use a strong, unique password for your account</p>
             <p>• Enable two-factor authentication for extra security</p>
             <p>• Keep your email address verified and up to date</p>

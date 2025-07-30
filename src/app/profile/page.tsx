@@ -43,7 +43,7 @@ export default async function ProfilePage() {
               </Avatar>
               <div className="flex-1">
                 <CardTitle className="text-2xl">{user.name || 'User'}</CardTitle>
-                <p className="text-gray-600">{user.email}</p>
+                <p className="text-muted-foreground">{user.email}</p>
                 <div className="flex items-center gap-2 mt-2">
                   {user.role === 'ADMIN' && (
                     <Badge variant="outline">
@@ -73,36 +73,36 @@ export default async function ProfilePage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
-                  <User className="h-5 w-5 text-gray-400" />
+                  <User className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Display Name</p>
-                    <p className="text-sm text-gray-600">{user.name || 'Not set'}</p>
+                    <p className="text-sm text-muted-foreground">{user.name || 'Not set'}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Email Address</p>
-                    <p className="text-sm text-gray-600">{user.email}</p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-gray-400" />
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Member Since</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
                     </p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <Shield className="h-5 w-5 text-gray-400" />
+                  <Shield className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Account Type</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {user.role === 'ADMIN' ? 'Administrator' : 'Standard User'}
                     </p>
                   </div>
@@ -117,13 +117,13 @@ export default async function ProfilePage() {
 
         {/* Email Verification Warning */}
         {!user.emailVerified && (
-          <Card className="border-yellow-200 bg-yellow-50">
+          <Card className="border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <XCircle className="h-5 w-5 text-yellow-600" />
+                <XCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                 <div className="flex-1">
-                  <p className="font-medium text-yellow-800">Email Not Verified</p>
-                  <p className="text-sm text-yellow-700">
+                  <p className="font-medium text-yellow-900 dark:text-yellow-100">Email Not Verified</p>
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
                     Please verify your email address to access all features and improve your account security.
                   </p>
                 </div>

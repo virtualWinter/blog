@@ -86,8 +86,8 @@ export function ProfileStats({ user }: ProfileStatsProps) {
           {message && (
             <div className={`p-2 rounded-md text-sm ${
               message.type === 'success' 
-                ? 'bg-green-50 text-green-800 border border-green-200' 
-                : 'bg-red-50 text-red-800 border border-red-200'
+                ? 'bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800' 
+                : 'bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800'
             }`}>
               {message.text}
             </div>
@@ -133,9 +133,9 @@ export function ProfileStats({ user }: ProfileStatsProps) {
 
           {securityScore < 80 && (
             <div className="pt-2">
-              <div className="flex items-center gap-2 p-2 bg-yellow-50 rounded-md">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <span className="text-sm text-yellow-800">
+              <div className="flex items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-950 rounded-md">
+                <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                <span className="text-sm text-yellow-800 dark:text-yellow-200">
                   Consider enabling 2FA for better security
                 </span>
               </div>
