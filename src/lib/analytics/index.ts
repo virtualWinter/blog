@@ -204,18 +204,20 @@ export async function getAnalyticsDashboardStats(
             topPages,
             recentActivity
         ] = await Promise.all([
-            // Total page views
+            // Total page views (excluding dashboard)
             prisma.analyticsEvent.count({
                 where: {
                     type: 'page_view',
                     createdAt: { gte: startDate },
+                    ...getDashboardExclusionFilter(),
                 },
             }),
-            // Unique visitors (distinct IP addresses)
+            // Unique visitors (distinct IP addresses, excluding dashboard)
             prisma.analyticsEvent.findMany({
                 where: {
                     type: 'page_view',
                     createdAt: { gte: startDate },
+                    ...getDashboardExclusionFilter(),
                 },
                 select: { ipAddress: true },
                 distinct: ['ipAddress'],
@@ -234,13 +236,14 @@ export async function getAnalyticsDashboardStats(
                     createdAt: { gte: startDate },
                 },
             }),
-            // Top pages
+            // Top pages (excluding dashboard)
             prisma.analyticsEvent.groupBy({
                 by: ['path'],
                 where: {
                     type: 'page_view',
                     createdAt: { gte: startDate },
                     path: { not: null },
+                    ...getDashboardExclusionFilter(),
                 },
                 _count: { path: true },
                 orderBy: { _count: { path: 'desc' } },
@@ -273,6 +276,7 @@ export async function getAnalyticsDashboardStats(
                 where: {
                     type: 'page_view',
                     createdAt: { gte: previousStartDate, lt: startDate },
+                    ...getDashboardExclusionFilter(),
                 },
             }),
             prisma.user.count({
@@ -448,18 +452,20 @@ export async function getSiteAnalytics(
             topPages,
             topReferrers
         ] = await Promise.all([
-            // Total page views
+            // Total page views (excluding dashboard)
             prisma.analyticsEvent.count({
                 where: {
                     type: 'page_view',
                     createdAt: { gte: startDate },
+                    ...getDashboardExclusionFilter(),
                 },
             }),
-            // Unique visitors
+            // Unique visitors (excluding dashboard)
             prisma.analyticsEvent.findMany({
                 where: {
                     type: 'page_view',
                     createdAt: { gte: startDate },
+                    ...getDashboardExclusionFilter(),
                 },
                 select: { ipAddress: true },
                 distinct: ['ipAddress'],
@@ -470,25 +476,27 @@ export async function getSiteAnalytics(
             prisma.post.count(),
             // Total comments
             prisma.comment.count(),
-            // Top pages
+            // Top pages (excluding dashboard)
             prisma.analyticsEvent.groupBy({
                 by: ['path'],
                 where: {
                     type: 'page_view',
                     createdAt: { gte: startDate },
                     path: { not: null },
+                    ...getDashboardExclusionFilter(),
                 },
                 _count: { path: true },
                 orderBy: { _count: { path: 'desc' } },
                 take: 10,
             }),
-            // Top referrers
+            // Top referrers (excluding dashboard)
             prisma.analyticsEvent.groupBy({
                 by: ['referrer'],
                 where: {
                     type: 'page_view',
                     createdAt: { gte: startDate },
                     referrer: { not: null },
+                    ...getDashboardExclusionFilter(),
                 },
                 _count: { referrer: true },
                 orderBy: { _count: { referrer: 'desc' } },
@@ -565,13 +573,14 @@ export async function getRealTimeAnalytics(): Promise<AnalyticsResult<RealTimeAn
                 select: { userId: true, ipAddress: true },
                 distinct: ['userId', 'ipAddress'],
             }).then(results => results.length),
-            // Current page views
+            // Current page views (excluding dashboard)
             prisma.analyticsEvent.groupBy({
                 by: ['path'],
                 where: {
                     type: 'page_view',
                     createdAt: { gte: fiveMinutesAgo },
                     path: { not: null },
+                    ...getDashboardExclusionFilter(),
                 },
                 _count: { path: true },
                 orderBy: { _count: { path: 'desc' } },
@@ -619,6 +628,19 @@ export async function getRealTimeAnalytics(): Promise<AnalyticsResult<RealTimeAn
             error: 'Failed to get real-time analytics',
         };
     }
+}
+
+/**
+ * Helper function to create dashboard exclusion filter
+ */
+function getDashboardExclusionFilter() {
+    return {
+        path: {
+            not: {
+                startsWith: '/dashboard'
+            }
+        }
+    };
 }
 
 /**

@@ -23,6 +23,11 @@ export function AnalyticsTracker() {
   }, []);
 
   useEffect(() => {
+    // Skip tracking for dashboard pages and admin routes
+    if (pathname.startsWith('/dashboard') || pathname.startsWith('/settings')) {
+      return;
+    }
+
     // Generate or get session ID
     let sessionId = sessionStorage.getItem('analytics-session');
     if (!sessionId) {
