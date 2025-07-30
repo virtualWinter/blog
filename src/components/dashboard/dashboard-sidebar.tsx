@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, Users } from 'lucide-react'
+import { LayoutDashboard, FileText, Users, MessageCircle } from 'lucide-react'
 
 import {
   Sidebar,
@@ -38,6 +38,11 @@ const navigationItems = [
     title: 'Posts',
     url: '/dashboard/posts',
     icon: FileText,
+  },
+  {
+    title: 'Comments',
+    url: '/dashboard/comments',
+    icon: MessageCircle,
   },
   {
     title: 'Users',

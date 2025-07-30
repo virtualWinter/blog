@@ -685,6 +685,50 @@ export async function getCommentsByPostId(postId: string): Promise<{ comments?: 
 }
 
 /**
+ * Gets all comments for admin management (admin only)
+ * @returns Promise that resolves to array of comments with post info or error
+ */
+export async function getAllComments(): Promise<{ comments?: (PublicComment & { post: { id: string; title: string } })[]; error?: string }> {
+    try {
+        const authResult = await requireAdmin();
+        if (!authResult.authorized) {
+            return {
+                error: authResult.reason || 'Only admins can view all comments',
+            };
+        }
+
+        const comments = await prisma.comment.findMany({
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        role: true,
+                    },
+                },
+                post: {
+                    select: {
+                        id: true,
+                        title: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+
+        return { comments: comments as (PublicComment & { post: { id: string; title: string } })[] };
+    } catch (error) {
+        console.error('Get all comments error:', error);
+        return {
+            error: 'Something went wrong. Please try again.',
+        };
+    }
+}
+
+/**
  * Checks comment rate limits for the current user without incrementing counters
  * @returns Promise that resolves to rate limit status
  */

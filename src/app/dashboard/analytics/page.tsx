@@ -6,7 +6,7 @@ import { BarChart3, TrendingUp, Users, FileText } from 'lucide-react';
 export default async function DashboardAnalyticsPage() {
   // User authorization is handled by the layout
   const statsResult = await getDashboardStats();
-  
+
   if (statsResult.error) {
     return (
       <div className="text-center py-12">
