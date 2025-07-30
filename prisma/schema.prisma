@@ -38,6 +38,7 @@ model User {
   emailOtpTokens EmailOtpToken[]
   posts         Post[]
   comments      Comment[]
+  analyticsEvents AnalyticsEvent[]
 }
 
 model Session {
@@ -97,4 +98,25 @@ model Comment {
   updatedAt DateTime @updatedAt
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  type      String
+  userId    String?
+  sessionId String?
+  path      String?
+  referrer  String?
+  userAgent String?
+  ipAddress String?
+  metadata  String?  // JSON string for flexible data storage
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([type])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([path])
+  @@index([createdAt])
+  @@index([type, createdAt])
 }

@@ -24,12 +24,6 @@ export default async function DashboardPostsPage() {
           <h2 className="text-2xl font-bold">Manage Posts</h2>
           <p className="text-muted-foreground">Create, edit, and manage your blog posts</p>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/posts/create">
-            <Plus className="h-4 w-4 mr-2" />
-            New Post
-          </Link>
-        </Button>
       </div>
 
       <AdminBlogPosts posts={postsResult.posts!} />
