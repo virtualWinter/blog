@@ -20,7 +20,7 @@ export const trackEventSchema = z.object({
     sessionId: z.string().optional(),
     path: z.string().optional(),
     referrer: z.string().optional(),
-    metadata: z.record(z.any()).optional(),
+    metadata: z.record(z.string(), z.any()).optional(),
 });
 
 /**

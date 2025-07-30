@@ -1,6 +1,7 @@
 import { getDashboardStats } from '@/lib/blog'
 import { getAllUsers } from '@/lib/auth/actions'
 import { AdminStats } from '@/components/dashboard/admin-stats'
+import { AnalyticsSummary } from '@/components/analytics/analytics-summary'
 
 export default async function DashboardPage() {
   // Fetch only the data needed for stats
@@ -31,9 +32,13 @@ export default async function DashboardPage() {
   const users = usersResult.users!
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-      <AdminStats stats={stats} userCount={users.length} />
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Dashboard</h1>
+      
+      <div className="grid gap-6 md:grid-cols-2">
+        <AdminStats stats={stats} userCount={users.length} />
+        <AnalyticsSummary />
+      </div>
     </div>
   )
 }

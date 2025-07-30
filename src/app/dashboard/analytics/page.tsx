@@ -5,7 +5,10 @@ import { getAnalyticsDashboardStats } from '@/lib/analytics';
 import { AnalyticsCharts } from '@/components/analytics/analytics-charts';
 import { TimeRangeSelector } from '@/components/analytics/time-range-selector';
 import { RealTimeStats } from '@/components/analytics/real-time-stats';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AnalyticsInsights } from '@/components/analytics/analytics-insights';
+import { AnalyticsExport } from '@/components/analytics/analytics-export';
+import { AnalyticsFilters } from '@/components/analytics/analytics-filters';
+
 import { Loader2 } from 'lucide-react';
 import type { AnalyticsDashboardStats, AnalyticsTimeRange } from '@/lib/analytics/types';
 
@@ -14,6 +17,7 @@ export default function DashboardAnalyticsPage() {
   const [stats, setStats] = useState<AnalyticsDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadStats() {
@@ -76,12 +80,19 @@ export default function DashboardAnalyticsPage() {
         <TimeRangeSelector value={timeRange} onValueChange={setTimeRange} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      {/* Main Analytics Grid */}
+      <div className="grid gap-6 lg:grid-cols-4">
+        {/* Main Charts - Takes up most space */}
+        <div className="lg:col-span-3 space-y-6">
           <AnalyticsCharts stats={stats} />
+          <AnalyticsInsights stats={stats} />
         </div>
-        <div>
+        
+        {/* Sidebar - Real-time stats and tools */}
+        <div className="space-y-6">
           <RealTimeStats />
+          <AnalyticsExport timeRange={timeRange} />
+          <AnalyticsFilters onFiltersChange={setFilters} />
         </div>
       </div>
     </div>

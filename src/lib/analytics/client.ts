@@ -12,8 +12,13 @@ import type { PageViewData, AnalyticsEventType } from './types';
  */
 export async function trackPageView(data: PageViewData): Promise<void> {
     try {
-        await serverTrackPageView({
-            ...data,
+        // Use the direct trackEvent function to include client-side metadata
+        await trackEvent({
+            type: 'page_view',
+            userId: data.userId,
+            sessionId: data.sessionId,
+            path: data.path,
+            referrer: data.referrer,
             metadata: {
                 title: data.title,
                 duration: data.duration,
