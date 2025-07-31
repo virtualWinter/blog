@@ -22,9 +22,9 @@ export default async function SignUpPage() {
         </Card>
         
         <div className="text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/auth/signin" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/auth/signin" className="font-medium text-primary hover:underline">
               Sign in
             </Link>
           </p>

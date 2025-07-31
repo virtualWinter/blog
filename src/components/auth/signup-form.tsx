@@ -24,7 +24,8 @@ export function SignUpForm() {
       setError(result.error)
       setIsLoading(false)
     } else {
-      router.push('/dashboard')
+      // Redirect to email verification page after successful signup
+      router.push('/auth/verify-email')
     }
   }
 

@@ -11,7 +11,7 @@ interface PostPageProps {
 
 export default async function PostPage({ params }: { params: { id: string } }) {
   const result = await getPostById(params.id);
-  
+
   if (result.error || !result.post) {
     notFound();
   }

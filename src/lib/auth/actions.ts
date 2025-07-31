@@ -689,6 +689,97 @@ export async function resendVerificationEmail(): Promise<EmailVerificationResult
     }
 }
 
+/**
+ * Server action to resend verification email for unauthenticated users
+ * @param formData - Form data containing email
+ * @returns Promise that resolves to email verification result
+ */
+export async function resendVerificationEmailByEmail(formData: FormData): Promise<EmailVerificationResult> {
+    const email = formData.get('email') as string;
+
+    if (!email) {
+        return {
+            error: 'Email is required.',
+        };
+    }
+
+    try {
+        // Rate limit verification email resends: 3 attempts per hour per email
+        const emailRateLimitResult = await rateLimit(email.toLowerCase(), {
+            windowMs: 60 * 60 * 1000, // 1 hour
+            maxRequests: 3,
+            namespace: 'resend-verification-email',
+        });
+
+        if (!emailRateLimitResult.success) {
+            return {
+                error: formatAuthRateLimitError(emailRateLimitResult.retryAfter, 'verification email'),
+            };
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { email: email.toLowerCase() },
+        });
+
+        if (!user) {
+            // Don't reveal if user exists or not for security
+            return {
+                success: true,
+                message: 'If an account with this email exists and is unverified, we\'ve sent a verification email.',
+            };
+        }
+
+        if (user.emailVerified) {
+            return {
+                success: true,
+                message: 'If an account with this email exists and is unverified, we\'ve sent a verification email.',
+            };
+        }
+
+        // Delete existing verification tokens
+        await prisma.verificationToken.deleteMany({
+            where: { userId: user.id },
+        });
+
+        // Create new verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+        await prisma.verificationToken.create({
+            data: {
+                userId: user.id,
+                token: verificationToken,
+                expiresAt,
+            },
+        });
+
+        // Send verification email
+        const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/verify-email?token=${verificationToken}`;
+
+        try {
+            await sendEmailVerification(user.email, {
+                name: user.name || 'User',
+                verificationLink,
+            });
+        } catch (emailError) {
+            console.error('Failed to send verification email:', emailError);
+            return {
+                error: 'Failed to send verification email. Please try again.',
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Verification email sent successfully! Please check your inbox.',
+        };
+    } catch (error) {
+        console.error('Resend verification email by email error:', error);
+        return {
+            error: 'Something went wrong. Please try again.',
+        };
+    }
+}
+
 // Admin-only actions
 
 /**

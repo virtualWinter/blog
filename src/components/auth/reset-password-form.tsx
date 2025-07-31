@@ -1,6 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Lock, Eye, EyeOff } from 'lucide-react';
 import { resetPassword } from '@/lib/auth/actions';
 
 interface ResetPasswordFormProps {
@@ -9,18 +15,28 @@ interface ResetPasswordFormProps {
 
 export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [result, setResult] = useState<{ success?: boolean; error?: string; message?: string } | null>(null);
+  const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
     setResult(null);
-    
-    // Add token to form data
+
+    // Add the token to the form data
     formData.append('token', token);
-    
+
     try {
       const response = await resetPassword(formData);
       setResult(response);
+      
+      if (response.success) {
+        // Redirect to sign in page after successful password reset
+        setTimeout(() => {
+          router.push('/auth/signin?message=Password reset successful. Please sign in with your new password.');
+        }, 2000);
+      }
     } catch (error) {
       setResult({
         success: false,
@@ -32,72 +48,98 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   }
 
   return (
-    <div className="w-full max-w-md">
-      <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
-      <p className="text-gray-600 mb-6">
-        Enter your new password below.
-      </p>
-      
+    <div className="space-y-4">
       <form action={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            New Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            required
-            minLength={8}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter your new password"
-          />
+        <div className="space-y-2">
+          <Label htmlFor="password">New Password</Label>
+          <div className="relative">
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              id="password"
+              name="password"
+              placeholder="Enter your new password"
+              required
+              disabled={isLoading}
+              minLength={8}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
 
-        <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-            Confirm New Password
-          </label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            required
-            minLength={8}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Confirm your new password"
-          />
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirm New Password</Label>
+          <div className="relative">
+            <Input
+              type={showConfirmPassword ? 'text' : 'password'}
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Confirm your new password"
+              required
+              disabled={isLoading}
+              minLength={8}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              disabled={isLoading}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-        >
-          {isLoading ? 'Resetting...' : 'Reset Password'}
-        </button>
+        <Button type="submit" disabled={isLoading} className="w-full">
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Resetting Password...
+            </>
+          ) : (
+            <>
+              <Lock className="h-4 w-4 mr-2" />
+              Reset Password
+            </>
+          )}
+        </Button>
       </form>
 
       {result && (
-        <div className={`mt-4 p-4 rounded-md ${result.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-          <p className="font-medium">
-            {result.success ? 'Success!' : 'Error'}
-          </p>
-          <p className="text-sm mt-1">
+        <Alert variant={result.success ? 'default' : 'destructive'}>
+          <AlertDescription>
             {result.message || result.error}
-          </p>
-          {result.success && (
-            <div className="mt-3">
-              <a 
-                href="/auth/signin" 
-                className="text-sm text-blue-600 hover:text-blue-500"
-              >
-                Go to Sign In →
-              </a>
-            </div>
-          )}
-        </div>
+          </AlertDescription>
+        </Alert>
       )}
+
+      <div className="text-sm text-muted-foreground">
+        <p>Password requirements:</p>
+        <ul className="list-disc list-inside mt-1 space-y-1">
+          <li>At least 8 characters long</li>
+          <li>Mix of uppercase and lowercase letters</li>
+          <li>At least one number</li>
+          <li>At least one special character</li>
+        </ul>
+      </div>
     </div>
   );
 }
