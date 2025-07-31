@@ -1,15 +1,52 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Eye, Users, Clock, MousePointer } from 'lucide-react';
-import type { AnalyticsDashboardStats } from '@/lib/analytics/types';
+import { AnalyticsAreaChart } from './analytics-area-chart';
+import { AnalyticsMultiChart } from './analytics-multi-chart';
+import { AnalyticsBarChart } from './analytics-bar-chart';
+import { getAnalyticsTimeSeriesData } from '@/lib/analytics';
+import { formatNumber } from '@/lib/utils/format';
+import type { AnalyticsDashboardStats, AnalyticsTimeRange } from '@/lib/analytics/types';
 
 interface AnalyticsChartsProps {
   stats: AnalyticsDashboardStats;
+  timeRange: AnalyticsTimeRange;
 }
 
-export function AnalyticsCharts({ stats }: AnalyticsChartsProps) {
+export function AnalyticsCharts({ stats, timeRange }: AnalyticsChartsProps) {
+  const [chartData, setChartData] = useState<{
+    pageViews: Array<{ date: string; value: number }>;
+    uniqueVisitors: Array<{ date: string; value: number }>;
+    sessions: Array<{ date: string; value: number }>;
+    combined: Array<{ 
+      date: string; 
+      pageViews: number; 
+      uniqueVisitors: number; 
+      sessions: number; 
+    }>;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadChartData() {
+      setLoading(true);
+      try {
+        const result = await getAnalyticsTimeSeriesData(timeRange);
+        if (result.success && result.data) {
+          setChartData(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to load chart data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadChartData();
+  }, [timeRange]);
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
@@ -129,61 +166,85 @@ export function AnalyticsCharts({ stats }: AnalyticsChartsProps) {
         </CardContent>
       </Card>
 
-      {/* Growth Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Growth Overview</CardTitle>
-          <CardDescription>Visual representation of key metrics growth</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Page Views Growth</span>
-                <span className={stats.growthMetrics.pageViewsGrowth >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  {formatPercentage(stats.growthMetrics.pageViewsGrowth)}
-                </span>
+      {/* Charts Section */}
+      {loading ? (
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardContent className="p-6">
+              <div className="animate-pulse space-y-4">
+                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full ${stats.growthMetrics.pageViewsGrowth >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                  style={{ width: `${Math.min(Math.abs(stats.growthMetrics.pageViewsGrowth), 100)}%` }}
-                />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="animate-pulse space-y-4">
+                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Users Growth</span>
-                <span className={stats.growthMetrics.usersGrowth >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  {formatPercentage(stats.growthMetrics.usersGrowth)}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full ${stats.growthMetrics.usersGrowth >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                  style={{ width: `${Math.min(Math.abs(stats.growthMetrics.usersGrowth), 100)}%` }}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Sessions Growth</span>
-                <span className={stats.growthMetrics.sessionsGrowth >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  {formatPercentage(stats.growthMetrics.sessionsGrowth)}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full ${stats.growthMetrics.sessionsGrowth >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                  style={{ width: `${Math.min(Math.abs(stats.growthMetrics.sessionsGrowth), 100)}%` }}
-                />
-              </div>
-            </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : chartData ? (
+        <div className="space-y-6">
+          {/* Multi-metric Chart */}
+          <AnalyticsMultiChart
+            title="Traffic Overview"
+            description="Page views, unique visitors, and sessions over time"
+            data={chartData.combined}
+            metrics={[
+              { key: 'pageViews', label: 'Page Views', color: 'hsl(var(--chart-1))' },
+              { key: 'uniqueVisitors', label: 'Unique Visitors', color: 'hsl(var(--chart-2))' },
+              { key: 'sessions', label: 'Sessions', color: 'hsl(var(--chart-3))' },
+            ]}
+            formatValue={formatNumber}
+          />
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Page Views Chart */}
+            <AnalyticsAreaChart
+              title="Page Views"
+              description="Total page views over time"
+              data={chartData.pageViews}
+              dataKey="value"
+              color="hsl(var(--chart-1))"
+              formatValue={formatNumber}
+            />
+
+            {/* Unique Visitors Chart */}
+            <AnalyticsAreaChart
+              title="Unique Visitors"
+              description="Unique visitors over time"
+              data={chartData.uniqueVisitors}
+              dataKey="value"
+              color="hsl(var(--chart-2))"
+              formatValue={formatNumber}
+            />
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Top Pages Chart */}
+          <AnalyticsBarChart
+            title="Top Pages"
+            description="Most visited pages"
+            data={stats.topPages.map(page => ({
+              name: page.title || page.path,
+              value: page.views,
+            }))}
+            dataKey="value"
+            nameKey="name"
+            color="hsl(var(--chart-4))"
+            formatValue={formatNumber}
+            maxItems={8}
+          />
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground">No chart data available</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Activity */}
       <Card>

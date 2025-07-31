@@ -84,7 +84,7 @@ export default function DashboardAnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-4">
         {/* Main Charts - Takes up most space */}
         <div className="lg:col-span-3 space-y-6">
-          <AnalyticsCharts stats={stats} />
+          <AnalyticsCharts stats={stats} timeRange={timeRange} />
           <AnalyticsInsights stats={stats} />
         </div>
         

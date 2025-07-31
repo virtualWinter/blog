@@ -781,6 +781,182 @@ export async function cleanupOldAnalyticsEvents(olderThanDays: number = 365): Pr
 }
 
 /**
+ * Gets time-series analytics data for charts
+ * @param timeRange - Time range for the data
+ * @returns Promise that resolves to time-series data
+ */
+export async function getAnalyticsTimeSeriesData(
+    timeRange: AnalyticsTimeRange = '30d'
+): Promise<AnalyticsResult<{
+    pageViews: Array<{ date: string; value: number }>;
+    uniqueVisitors: Array<{ date: string; value: number }>;
+    sessions: Array<{ date: string; value: number }>;
+    combined: Array<{ 
+        date: string; 
+        pageViews: number; 
+        uniqueVisitors: number; 
+        sessions: number; 
+    }>;
+}>> {
+    try {
+        const session = await getSession();
+        if (!session) {
+            return {
+                success: false,
+                error: 'Authentication required',
+            };
+        }
+
+        // Calculate date range and intervals
+        const now = new Date();
+        let startDate: Date;
+        let intervalDays: number;
+
+        switch (timeRange) {
+            case '24h':
+                startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                intervalDays = 1;
+                break;
+            case '7d':
+                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                intervalDays = 1;
+                break;
+            case '30d':
+                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                intervalDays = 1;
+                break;
+            case '90d':
+                startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                intervalDays = 3;
+                break;
+            case '1y':
+                startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+                intervalDays = 7;
+                break;
+            default:
+                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                intervalDays = 1;
+        }
+
+        // Generate date intervals
+        const dates: string[] = [];
+        const currentDate = new Date(startDate);
+        while (currentDate <= now) {
+            dates.push(currentDate.toISOString().split('T')[0]);
+            currentDate.setDate(currentDate.getDate() + intervalDays);
+        }
+
+        // Get analytics events grouped by date
+        const events = await prisma.analyticsEvent.findMany({
+            where: {
+                createdAt: { gte: startDate },
+                ...getDashboardExclusionFilter(),
+            },
+            select: {
+                type: true,
+                createdAt: true,
+                sessionId: true,
+                ipAddress: true,
+            },
+        });
+
+        // Process data by date
+        const dataByDate = new Map<string, {
+            pageViews: number;
+            uniqueVisitors: Set<string>;
+            sessions: Set<string>;
+        }>();
+
+        // Initialize all dates
+        dates.forEach(date => {
+            dataByDate.set(date, {
+                pageViews: 0,
+                uniqueVisitors: new Set(),
+                sessions: new Set(),
+            });
+        });
+
+        // Process events
+        events.forEach(event => {
+            const eventDate = event.createdAt.toISOString().split('T')[0];
+            
+            // Find the appropriate date bucket
+            let targetDate = eventDate;
+            if (intervalDays > 1) {
+                // For multi-day intervals, find the closest interval start
+                const eventTime = new Date(eventDate).getTime();
+                let closestDate = dates[0];
+                let closestDiff = Math.abs(new Date(dates[0]).getTime() - eventTime);
+                
+                for (const date of dates) {
+                    const diff = Math.abs(new Date(date).getTime() - eventTime);
+                    if (diff < closestDiff) {
+                        closestDate = date;
+                        closestDiff = diff;
+                    }
+                }
+                targetDate = closestDate;
+            }
+
+            const dayData = dataByDate.get(targetDate);
+            if (dayData) {
+                if (event.type === 'page_view') {
+                    dayData.pageViews++;
+                }
+                if (event.ipAddress) {
+                    dayData.uniqueVisitors.add(event.ipAddress);
+                }
+                if (event.sessionId) {
+                    dayData.sessions.add(event.sessionId);
+                }
+            }
+        });
+
+        // Convert to chart data format
+        const pageViews = dates.map(date => ({
+            date,
+            value: dataByDate.get(date)?.pageViews || 0,
+        }));
+
+        const uniqueVisitors = dates.map(date => ({
+            date,
+            value: dataByDate.get(date)?.uniqueVisitors.size || 0,
+        }));
+
+        const sessions = dates.map(date => ({
+            date,
+            value: dataByDate.get(date)?.sessions.size || 0,
+        }));
+
+        const combined = dates.map(date => {
+            const dayData = dataByDate.get(date);
+            return {
+                date,
+                pageViews: dayData?.pageViews || 0,
+                uniqueVisitors: dayData?.uniqueVisitors.size || 0,
+                sessions: dayData?.sessions.size || 0,
+            };
+        });
+
+        return {
+            success: true,
+            data: {
+                pageViews,
+                uniqueVisitors,
+                sessions,
+                combined,
+            },
+        };
+    } catch (error) {
+        console.error('Get analytics time series data error:', error);
+        return {
+            success: false,
+            error: 'Failed to get analytics time series data',
+        };
+    }
+}
+
+/**
  * Cleans up analytics cache and returns statistics
  * @returns Promise that resolves to cache cleanup result
  */

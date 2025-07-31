@@ -10,7 +10,7 @@ const CACHE_CONFIG = {
   REAL_TIME_STATS_TTL: 30, // 30 seconds
   POST_ANALYTICS_TTL: 10 * 60, // 10 minutes
   SITE_ANALYTICS_TTL: 15 * 60, // 15 minutes
-  
+
   // Cache key prefixes
   DASHBOARD_STATS_PREFIX: 'analytics:dashboard',
   REAL_TIME_STATS_PREFIX: 'analytics:realtime',
@@ -68,7 +68,7 @@ async function getCached<T>(key: string): Promise<T | null> {
  */
 async function setCached<T>(key: string, data: T, ttlSeconds: number): Promise<void> {
   const serialized = JSON.stringify(data);
-  
+
   // Try Redis first
   const redisClient = getRedisClient();
   if (redisClient) {
@@ -231,14 +231,14 @@ export const analyticsCache = {
   cleanupMemoryCache(): number {
     const now = Date.now();
     let cleaned = 0;
-    
+
     for (const [key, value] of memoryCache.entries()) {
       if (isExpired(value.expires)) {
         memoryCache.delete(key);
         cleaned++;
       }
     }
-    
+
     return cleaned;
   },
 
