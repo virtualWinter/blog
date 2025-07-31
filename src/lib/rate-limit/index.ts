@@ -1,3 +1,4 @@
+import { getRedisClient, redisUtils } from '@/lib/redis';
 import type {
     RateLimitConfig,
     RateLimitResult,
@@ -9,7 +10,7 @@ import type {
 } from './types';
 
 /**
- * In-memory rate limit store
+ * In-memory rate limit store (fallback when Redis is not available)
  * Maps identifier to rate limit entry
  */
 const rateLimitStore: RateLimitStore = new Map();
@@ -93,17 +94,69 @@ function calculateResetTime(entry: RateLimitEntry, windowMs: number): number {
 }
 
 /**
- * Main rate limiting function
- * @param identifier - The unique identifier (IP address, user ID, etc.)
- * @param options - Rate limit options
+ * Redis-based rate limiting function
+ * @param identifier - The unique identifier
+ * @param config - Rate limit configuration
  * @returns Promise that resolves to rate limit result
  */
-export async function rateLimit(
+async function rateLimitWithRedis(
     identifier: string,
-    options: RateLimitOptions = {}
+    config: RateLimitConfig
 ): Promise<RateLimitResult> {
-    'use server';
-    const config = { ...DEFAULT_CONFIG, ...options };
+    const key = createRateLimitKey(identifier, config.namespace);
+    const windowSeconds = Math.ceil(config.windowMs / 1000);
+    const now = getCurrentTime();
+
+    try {
+        // Use Redis INCR with expiration for atomic rate limiting
+        const count = await redisUtils.incr(key, windowSeconds);
+        
+        if (count === null) {
+            // Redis failed, fall back to in-memory
+            return rateLimitInMemory(identifier, config);
+        }
+
+        const resetTime = now + config.windowMs;
+        const remaining = Math.max(0, config.maxRequests - count);
+
+        if (count > config.maxRequests) {
+            const ttl = await redisUtils.ttl(key);
+            const retryAfter = ttl && ttl > 0 ? ttl : windowSeconds;
+
+            return {
+                success: false,
+                limit: config.maxRequests,
+                remaining: 0,
+                resetTime,
+                retryAfter,
+                error: 'Rate limit exceeded',
+            };
+        }
+
+        return {
+            success: true,
+            limit: config.maxRequests,
+            remaining,
+            resetTime,
+            retryAfter: 0,
+        };
+    } catch (error) {
+        console.error('Redis rate limit error:', error);
+        // Fall back to in-memory rate limiting
+        return rateLimitInMemory(identifier, config);
+    }
+}
+
+/**
+ * In-memory rate limiting function (fallback)
+ * @param identifier - The unique identifier
+ * @param config - Rate limit configuration
+ * @returns Promise that resolves to rate limit result
+ */
+async function rateLimitInMemory(
+    identifier: string,
+    config: RateLimitConfig
+): Promise<RateLimitResult> {
     const key = createRateLimitKey(identifier, config.namespace);
     const now = getCurrentTime();
 
@@ -168,6 +221,28 @@ export async function rateLimit(
         resetTime,
         retryAfter: 0,
     };
+}
+
+/**
+ * Main rate limiting function
+ * @param identifier - The unique identifier (IP address, user ID, etc.)
+ * @param options - Rate limit options
+ * @returns Promise that resolves to rate limit result
+ */
+export async function rateLimit(
+    identifier: string,
+    options: RateLimitOptions = {}
+): Promise<RateLimitResult> {
+    'use server';
+    const config = { ...DEFAULT_CONFIG, ...options };
+    
+    // Try Redis first, fall back to in-memory if Redis is not available
+    const redisClient = getRedisClient();
+    if (redisClient) {
+        return rateLimitWithRedis(identifier, config);
+    } else {
+        return rateLimitInMemory(identifier, config);
+    }
 }
 
 /**
@@ -245,6 +320,15 @@ export async function resetRateLimit(
 ): Promise<boolean> {
     'use server';
     const key = createRateLimitKey(identifier, namespace);
+    
+    // Try Redis first
+    const redisClient = getRedisClient();
+    if (redisClient) {
+        const deleted = await redisUtils.del(key);
+        return deleted;
+    }
+    
+    // Fall back to in-memory
     return rateLimitStore.delete(key);
 }
 

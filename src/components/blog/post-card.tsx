@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageCircle, Edit, Trash2 } from 'lucide-react';
+import { MessageCircle, Edit, Trash2, Eye } from 'lucide-react';
 import { AdminOnly } from '@/components/auth/role-guard';
 import { deletePost } from '@/lib/blog';
+import { formatNumber } from '@/lib/utils/format';
 import type { PublicPost } from '@/lib/blog/types';
 import { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -106,9 +107,15 @@ export function PostCard({ post, showActions = false }: PostCardProps) {
               <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
             </div>
             
-            <div className="flex items-center gap-1">
-              <MessageCircle className="h-4 w-4" />
-              <span>{post._count.comments}</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <Eye className="h-4 w-4" />
+                <span>{formatNumber(post._count.views || 0)}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <MessageCircle className="h-4 w-4" />
+                <span>{formatNumber(post._count.comments)}</span>
+              </div>
             </div>
           </div>
           

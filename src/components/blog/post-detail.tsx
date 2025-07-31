@@ -9,13 +9,14 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
-import { Edit, Trash2, ArrowLeft } from 'lucide-react';
+import { Edit, Trash2, ArrowLeft, Eye, MessageCircle } from 'lucide-react';
 import { AdminOnly } from '@/components/auth/role-guard';
 import { CommentForm } from './comment-form';
 import { CommentList } from './comment-list';
 import { PostViewTracker } from '@/components/analytics/post-view-tracker';
 import { getCurrentUserClient } from '@/lib/auth/client';
 import { deletePost } from '@/lib/blog';
+import { formatViewCount, formatCommentCount } from '@/lib/utils/format';
 import type { PublicPost } from '@/lib/blog/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
@@ -116,6 +117,18 @@ export function PostDetail({ post }: PostDetailProps) {
                     <span>Updated {formatDistanceToNow(new Date(post.updatedAt), { addSuffix: true })}</span>
                   </>
                 )}
+              </div>
+              
+              {/* Post stats */}
+              <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  <span>{formatViewCount(post._count.views || 0)}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MessageCircle className="h-4 w-4" />
+                  <span>{formatCommentCount(post._count.comments)}</span>
+                </div>
               </div>
             </div>
             

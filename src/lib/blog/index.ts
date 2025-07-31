@@ -262,7 +262,20 @@ export async function getAllPosts(includeUnpublished = false): Promise<{ posts?:
             },
         });
 
-        return { posts: posts as PublicPost[] };
+        // Get view counts for all posts
+        const postIds = posts.map(post => post.id);
+        const viewCounts = await getPostViewCounts(postIds);
+
+        // Add view counts to posts
+        const postsWithViews = posts.map(post => ({
+            ...post,
+            _count: {
+                ...post._count,
+                views: viewCounts.get(post.id) || 0,
+            },
+        }));
+
+        return { posts: postsWithViews as PublicPost[] };
     } catch (error) {
         console.error('Get all posts error:', error);
         return {
@@ -325,7 +338,19 @@ export async function getPostById(postId: string): Promise<{ post?: PublicPost; 
             }
         }
 
-        return { post: post as PublicPost };
+        // Get view count for this post
+        const viewCount = await getPostViewCount(postId);
+
+        // Add view count to post
+        const postWithViews = {
+            ...post,
+            _count: {
+                ...post._count,
+                views: viewCount,
+            },
+        };
+
+        return { post: postWithViews as PublicPost };
     } catch (error) {
         console.error('Get post by ID error:', error);
         return {
@@ -1019,4 +1044,86 @@ export async function getCommentRateLimitStatus(userId: string, clientIP: string
             ipRemaining: ipDeleteCheck.remaining,
         },
     };
+}
+
+/**
+ * Gets view count for a specific post from analytics data
+ * @param postId - The ID of the post
+ * @returns Promise that resolves to view count
+ */
+export async function getPostViewCount(postId: string): Promise<number> {
+    try {
+        const viewCount = await prisma.analyticsEvent.count({
+            where: {
+                type: 'post_view',
+                metadata: {
+                    contains: `"postId":"${postId}"`
+                }
+            }
+        });
+        
+        return viewCount;
+    } catch (error) {
+        console.error('Get post view count error:', error);
+        return 0;
+    }
+}
+
+/**
+ * Gets view counts for multiple posts
+ * @param postIds - Array of post IDs
+ * @returns Promise that resolves to map of post ID to view count
+ */
+export async function getPostViewCounts(postIds: string[]): Promise<Map<string, number>> {
+    const viewCounts = new Map<string, number>();
+    
+    try {
+        // Get all post view events for the given post IDs
+        const events = await prisma.analyticsEvent.findMany({
+            where: {
+                type: 'post_view',
+                metadata: {
+                    not: null
+                }
+            },
+            select: {
+                metadata: true
+            }
+        });
+
+        // Count views for each post
+        for (const event of events) {
+            if (event.metadata) {
+                try {
+                    const metadata = JSON.parse(event.metadata);
+                    const postId = metadata.postId;
+                    
+                    if (postIds.includes(postId)) {
+                        const currentCount = viewCounts.get(postId) || 0;
+                        viewCounts.set(postId, currentCount + 1);
+                    }
+                } catch (parseError) {
+                    // Skip invalid metadata
+                    continue;
+                }
+            }
+        }
+
+        // Ensure all requested post IDs have a count (even if 0)
+        for (const postId of postIds) {
+            if (!viewCounts.has(postId)) {
+                viewCounts.set(postId, 0);
+            }
+        }
+
+        return viewCounts;
+    } catch (error) {
+        console.error('Get post view counts error:', error);
+        
+        // Return empty counts for all posts on error
+        for (const postId of postIds) {
+            viewCounts.set(postId, 0);
+        }
+        return viewCounts;
+    }
 }

@@ -4,6 +4,7 @@ import { getSession, requireAdmin } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { rateLimit } from '@/lib/rate-limit';
 import { getClientIP } from '@/lib/rate-limit/utils';
+import { analyticsCache } from './cache';
 import { trackEventSchema, trackPageViewSchema, trackPostViewSchema } from './schema';
 import type {
     AnalyticsEventType,
@@ -70,6 +71,21 @@ export async function trackEvent(eventData: {
                 metadata: metadata ? JSON.stringify(metadata) : null,
             },
         });
+
+        // Invalidate relevant caches when new events are tracked
+        if (type === 'page_view' || type === 'post_view') {
+            // Invalidate dashboard and site analytics caches
+            await Promise.all([
+                analyticsCache.dashboardStats.invalidate(),
+                analyticsCache.siteAnalytics.invalidate(),
+                analyticsCache.realTimeStats.invalidate(),
+            ]);
+
+            // If it's a post view, also invalidate post-specific cache
+            if (type === 'post_view' && metadata?.postId) {
+                await analyticsCache.postAnalytics.invalidate(metadata.postId);
+            }
+        }
 
         return {
             success: true,
@@ -168,6 +184,15 @@ export async function getAnalyticsDashboardStats(
             return {
                 success: false,
                 error: 'Authentication required',
+            };
+        }
+
+        // Try to get from cache first
+        const cached = await analyticsCache.dashboardStats.get(timeRange);
+        if (cached) {
+            return {
+                success: true,
+                data: cached,
             };
         }
 
@@ -334,6 +359,9 @@ export async function getAnalyticsDashboardStats(
             },
         };
 
+        // Cache the results
+        await analyticsCache.dashboardStats.set(timeRange, stats);
+
         return {
             success: true,
             data: stats,
@@ -363,6 +391,15 @@ export async function getPostAnalytics(
             return {
                 success: false,
                 error: 'Authentication required',
+            };
+        }
+
+        // Try to get from cache first
+        const cached = await analyticsCache.postAnalytics.get(postId, timeRange);
+        if (cached) {
+            return {
+                success: true,
+                data: cached,
             };
         }
 
@@ -410,6 +447,9 @@ export async function getPostAnalytics(
             bounceRate: 0.3, // Placeholder: 30%
         };
 
+        // Cache the results
+        await analyticsCache.postAnalytics.set(postId, timeRange, postAnalytics);
+
         return {
             success: true,
             data: postAnalytics,
@@ -437,6 +477,15 @@ export async function getSiteAnalytics(
             return {
                 success: false,
                 error: authResult.reason || 'Admin access required',
+            };
+        }
+
+        // Try to get from cache first
+        const cached = await analyticsCache.siteAnalytics.get(timeRange);
+        if (cached) {
+            return {
+                success: true,
+                data: cached,
             };
         }
 
@@ -532,6 +581,9 @@ export async function getSiteAnalytics(
             ],
         };
 
+        // Cache the results
+        await analyticsCache.siteAnalytics.set(timeRange, siteAnalytics);
+
         return {
             success: true,
             data: siteAnalytics,
@@ -556,6 +608,15 @@ export async function getRealTimeAnalytics(): Promise<AnalyticsResult<RealTimeAn
             return {
                 success: false,
                 error: authResult.reason || 'Admin access required',
+            };
+        }
+
+        // Try to get from cache first (short TTL for real-time data)
+        const cached = await analyticsCache.realTimeStats.get();
+        if (cached) {
+            return {
+                success: true,
+                data: cached,
             };
         }
 
@@ -613,6 +674,9 @@ export async function getRealTimeAnalytics(): Promise<AnalyticsResult<RealTimeAn
                 metadata: event.metadata ? JSON.parse(event.metadata) : undefined,
             })),
         };
+
+        // Cache the results with short TTL
+        await analyticsCache.realTimeStats.set(realTimeAnalytics);
 
         return {
             success: true,
@@ -699,6 +763,9 @@ export async function cleanupOldAnalyticsEvents(olderThanDays: number = 365): Pr
             },
         });
 
+        // Also invalidate all caches after cleanup
+        await analyticsCache.invalidateAll();
+
         return {
             success: true,
             data: { deletedCount: result.count },
@@ -709,6 +776,43 @@ export async function cleanupOldAnalyticsEvents(olderThanDays: number = 365): Pr
         return {
             success: false,
             error: 'Failed to cleanup old analytics events',
+        };
+    }
+}
+
+/**
+ * Cleans up analytics cache and returns statistics
+ * @returns Promise that resolves to cache cleanup result
+ */
+export async function cleanupAnalyticsCache(): Promise<AnalyticsResult<{ 
+    memoryCacheEntriesRemoved: number;
+    cacheStats: any;
+}>> {
+    try {
+        const authResult = await requireAdmin();
+        if (!authResult.authorized) {
+            return {
+                success: false,
+                error: authResult.reason || 'Admin access required',
+            };
+        }
+
+        const memoryCacheEntriesRemoved = analyticsCache.cleanupMemoryCache();
+        const cacheStats = analyticsCache.getStats();
+
+        return {
+            success: true,
+            data: {
+                memoryCacheEntriesRemoved,
+                cacheStats,
+            },
+            message: `Cleaned up ${memoryCacheEntriesRemoved} expired cache entries`,
+        };
+    } catch (error) {
+        console.error('Cleanup analytics cache error:', error);
+        return {
+            success: false,
+            error: 'Failed to cleanup analytics cache',
         };
     }
 }

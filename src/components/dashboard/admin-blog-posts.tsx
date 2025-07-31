@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Edit, Trash2, Plus } from 'lucide-react';
+import { Edit, Trash2, Plus, Eye, MessageCircle } from 'lucide-react';
 import { deletePost } from '@/lib/blog';
 import type { PublicPost } from '@/lib/blog/types';
 
@@ -84,9 +84,18 @@ export function AdminBlogPosts({ posts: initialPosts }: AdminBlogPostsProps) {
                       {post.published ? 'Live' : 'Draft'}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {post._count.comments} comments • {new Date(post.createdAt).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Eye className="h-3 w-3" />
+                      <span>{post._count.views || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MessageCircle className="h-3 w-3" />
+                      <span>{post._count.comments}</span>
+                    </div>
+                    <span>•</span>
+                    <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button asChild variant="ghost" size="sm">

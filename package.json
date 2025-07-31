@@ -59,6 +59,7 @@
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
+    "ioredis": "^5.4.1",
     "jose": "^6.0.12",
     "lucide-react": "^0.526.0",
     "next": "15.4.4",
@@ -80,6 +81,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/ioredis": "^5.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -29,6 +29,7 @@ export interface PublicPost {
     author: PublicUser;
     _count: {
         comments: number;
+        views?: number;
     };
 }
 
