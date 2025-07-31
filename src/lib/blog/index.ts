@@ -1127,3 +1127,154 @@ export async function getPostViewCounts(postIds: string[]): Promise<Map<string, 
         return viewCounts;
     }
 }
+
+/**
+ * Gets enhanced dashboard data including recent activity
+ * @returns Promise that resolves to enhanced dashboard data
+ */
+export async function getEnhancedDashboardData(): Promise<{
+    stats?: {
+        totalPosts: number;
+        publishedPosts: number;
+        unpublishedPosts: number;
+        totalComments: number;
+        userComments: number;
+    };
+    recentPosts?: PublicPost[];
+    recentComments?: (PublicComment & { post: { id: string; title: string } })[];
+    recentUsers?: Array<{
+        id: string;
+        name: string | null;
+        email: string;
+        createdAt: Date;
+        emailVerified: boolean;
+    }>;
+    systemStatus?: {
+        database: 'healthy' | 'warning' | 'error';
+        redis: 'healthy' | 'warning' | 'error' | 'unavailable';
+        email: 'healthy' | 'warning' | 'error';
+        analytics: 'healthy' | 'warning' | 'error';
+    };
+    error?: string;
+}> {
+    try {
+        const session = await getSession();
+        if (!session) {
+            return {
+                error: 'Authentication required',
+            };
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: session.userId },
+            select: { role: true },
+        });
+
+        const isAdmin = user?.role === 'ADMIN';
+
+        if (!isAdmin) {
+            return {
+                error: 'Admin access required',
+            };
+        }
+
+        // Get basic stats
+        const [totalPosts, publishedPosts, unpublishedPosts, totalComments, userComments] = await Promise.all([
+            prisma.post.count(),
+            prisma.post.count({ where: { published: true } }),
+            prisma.post.count({ where: { published: false } }),
+            prisma.comment.count(),
+            prisma.comment.count({ where: { authorId: session.userId } }),
+        ]);
+
+        // Get recent posts with view counts
+        const recentPostsRaw = await prisma.post.findMany({
+            take: 5,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        role: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        comments: true,
+                    },
+                },
+            },
+        });
+
+        // Add view counts to recent posts
+        const postIds = recentPostsRaw.map(post => post.id);
+        const viewCounts = await getPostViewCounts(postIds);
+        const recentPosts = recentPostsRaw.map(post => ({
+            ...post,
+            _count: {
+                ...post._count,
+                views: viewCounts.get(post.id) || 0,
+            },
+        })) as PublicPost[];
+
+        // Get recent comments
+        const recentComments = await prisma.comment.findMany({
+            take: 5,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        role: true,
+                    },
+                },
+                post: {
+                    select: {
+                        id: true,
+                        title: true,
+                    },
+                },
+            },
+        }) as (PublicComment & { post: { id: string; title: string } })[];
+
+        // Get recent users
+        const recentUsers = await prisma.user.findMany({
+            take: 5,
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                createdAt: true,
+                emailVerified: true,
+            },
+        });
+
+        // Check system status
+        const { performSystemHealthCheck } = await import('@/lib/utils/system-health');
+        const systemStatus = await performSystemHealthCheck();
+
+        return {
+            stats: {
+                totalPosts,
+                publishedPosts,
+                unpublishedPosts,
+                totalComments,
+                userComments,
+            },
+            recentPosts,
+            recentComments,
+            recentUsers,
+            systemStatus,
+        };
+    } catch (error) {
+        console.error('Get enhanced dashboard data error:', error);
+        return {
+            error: 'Failed to load dashboard data',
+        };
+    }
+}
