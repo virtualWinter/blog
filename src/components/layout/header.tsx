@@ -150,22 +150,6 @@ export function Header() {
             <Link href="/" className="font-medium">
               vWinter's smol portfolio
             </Link>
-            
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-4">
-              <Link 
-                href="/blog" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Blog
-              </Link>
-              <Link 
-                href="/anime" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Anime
-              </Link>
-            </nav>
           </div>
 
           {/* Desktop User Menu */}
