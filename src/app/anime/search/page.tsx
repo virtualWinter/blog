@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AnimeSearchForm } from '@/components/anime/anime-search-form';
 import { AnimeGrid } from '@/components/anime/anime-grid';
 import { useAnimeSearch } from '@/lib/consumet';
 import { SearchFilters } from '@/lib/consumet/types';
 
-export default function AnimeSearchPage() {
+function AnimeSearchContent() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [page, setPage] = useState(1);
@@ -134,5 +134,36 @@ export default function AnimeSearchPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AnimeSearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">Search Anime</h1>
+            <div className="h-12 bg-gray-200 animate-pulse rounded-lg" />
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="w-full h-64 bg-gray-200 animate-pulse" />
+                <div className="p-4 space-y-2">
+                  <div className="h-4 bg-gray-200 animate-pulse rounded" />
+                  <div className="h-3 bg-gray-200 animate-pulse rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 animate-pulse rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    }>
+      <AnimeSearchContent />
+    </Suspense>
   );
 }
