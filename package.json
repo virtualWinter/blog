@@ -19,6 +19,7 @@
     "db:reset-connections": "node scripts/reset-db-connections.js"
   },
   "dependencies": {
+    "@consumet/extensions": "^1.8.1",
     "@hookform/resolvers": "^5.2.0",
     "@prisma/adapter-pg": "^6.12.0",
     "@prisma/client": "^6.12.0",

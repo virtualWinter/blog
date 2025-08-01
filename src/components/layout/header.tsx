@@ -150,6 +150,22 @@ export function Header() {
             vWinter's smol portfolio
           </Link>
 
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-6">
+            <Link
+              href="/blog"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Blog
+            </Link>
+            <Link
+              href="/anime"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Anime
+            </Link>
+          </nav>
+
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center gap-2">
             <ThemeToggle />
@@ -196,6 +212,12 @@ export function Header() {
                       className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                     >
                       Blog
+                    </Link>
+                    <Link
+                      href="/anime"
+                      className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                    >
+                      Anime
                     </Link>
                     <Link
                       href="mailto:hello@example.com"
