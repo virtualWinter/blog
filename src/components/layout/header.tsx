@@ -145,10 +145,28 @@ export function Header() {
     <header className="border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="font-medium">
-            vWinter's smol portfolio
-          </Link>
+          {/* Logo and Navigation */}
+          <div className="flex items-center gap-6">
+            <Link href="/" className="font-medium">
+              vWinter's smol portfolio
+            </Link>
+            
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-4">
+              <Link 
+                href="/blog" 
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Blog
+              </Link>
+              <Link 
+                href="/anime" 
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Anime
+              </Link>
+            </nav>
+          </div>
 
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center gap-2">
