@@ -53,7 +53,11 @@ export function RecentEpisodes() {
   if (error) {
     return (
       <Card className="p-6 border-destructive">
-        <p className="text-destructive text-sm">{error}</p>
+        <div className="space-y-2">
+          <p className="text-destructive text-sm font-medium">Error loading recent episodes:</p>
+          <p className="text-destructive text-xs">{error}</p>
+          <p className="text-muted-foreground text-xs">Try using the search function above instead.</p>
+        </div>
       </Card>
     );
   }

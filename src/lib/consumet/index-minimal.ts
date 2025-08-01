@@ -105,8 +105,12 @@ export async function searchAnime(
             throw new Error(`Provider ${provider} not found`);
         }
 
+        console.log('Searching for:', query, 'with provider:', provider);
         const results = await selectedProvider.search(query);
-        return (results.results || []).map(mapAnimeResult);
+        console.log('Raw results:', results);
+        const mappedResults = (results.results || []).map(mapAnimeResult);
+        console.log('Mapped results:', mappedResults.length, 'items');
+        return mappedResults;
     } catch (error) {
         console.error('Search anime error:', error);
         throw new Error(`Failed to search anime: ${error instanceof Error ? error.message : 'Unknown error'}`);

@@ -33,6 +33,14 @@ export default function AnimePage() {
           </Suspense>
         </section>
 
+        {/* Debug: Test Search */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Debug: Test Search</h2>
+          <div className="text-sm text-muted-foreground">
+            If you see this section, the page is loading. Try searching for "naruto" above to test if the search works.
+          </div>
+        </section>
+
         {/* Popular Anime */}
         <section>
           <h2 className="text-2xl font-semibold mb-4">Popular Anime</h2>

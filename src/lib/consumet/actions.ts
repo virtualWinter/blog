@@ -259,25 +259,14 @@ export async function getTrendingAnime(formData: FormData): Promise<SearchResult
             throw new Error('Provider not found');
         }
 
-        // Try different method names that might exist on the provider
-        let results: any;
-        try {
-            if ('fetchTrendingAnime' in selectedProvider && typeof selectedProvider.fetchTrendingAnime === 'function') {
-                results = await selectedProvider.fetchTrendingAnime();
-            } else if ('fetchTopAiring' in selectedProvider && typeof selectedProvider.fetchTopAiring === 'function') {
-                results = await (selectedProvider as any).fetchTopAiring();
-            } else if ('search' in selectedProvider) {
-                // Fallback to search with popular terms
-                results = await selectedProvider.search('popular', 1);
-            } else {
-                throw new Error('Trending not supported for this provider');
-            }
-        } catch (methodError) {
-            // If specific methods fail, try a generic search
-            results = await selectedProvider.search('anime', 1);
-        }
-
-        return results?.results || results || [];
+        // Since gogoanime doesn't have trending methods, use popular search terms
+        const trendingQueries = ['naruto', 'one piece', 'attack on titan', 'demon slayer', 'jujutsu kaisen'];
+        const randomQuery = trendingQueries[Math.floor(Math.random() * trendingQueries.length)];
+        
+        console.log('Fetching trending anime with query:', randomQuery);
+        const results = await searchAnimeCore(randomQuery, provider);
+        console.log('Trending results:', results.length, 'items');
+        return results.slice(0, 10);
     } catch (error) {
         console.error('Get trending anime action error:', error);
         throw new Error(`Failed to get trending anime: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -310,25 +299,12 @@ export async function getPopularAnime(formData: FormData): Promise<SearchResult[
             throw new Error('Provider not found');
         }
 
-        // Try different method names that might exist on the provider
-        let results: any;
-        try {
-            if ('fetchPopularAnime' in selectedProvider && typeof selectedProvider.fetchPopularAnime === 'function') {
-                results = await selectedProvider.fetchPopularAnime();
-            } else if ('fetchPopular' in selectedProvider && typeof selectedProvider.fetchPopular === 'function') {
-                results = await (selectedProvider as any).fetchPopular();
-            } else if ('search' in selectedProvider) {
-                // Fallback to search with popular terms
-                results = await selectedProvider.search('naruto', 1);
-            } else {
-                throw new Error('Popular not supported for this provider');
-            }
-        } catch (methodError) {
-            // If specific methods fail, try a generic search
-            results = await selectedProvider.search('one piece', 1);
-        }
-
-        return results?.results || results || [];
+        // Since gogoanime doesn't have popular methods, use popular search terms
+        const popularQueries = ['dragon ball', 'one piece', 'naruto', 'bleach', 'hunter x hunter'];
+        const randomQuery = popularQueries[Math.floor(Math.random() * popularQueries.length)];
+        
+        const results = await searchAnimeCore(randomQuery, provider);
+        return results.slice(0, 10);
     } catch (error) {
         console.error('Get popular anime action error:', error);
         throw new Error(`Failed to get popular anime: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -361,27 +337,12 @@ export async function getRecentEpisodes(formData: FormData): Promise<SearchResul
             throw new Error('Provider not found');
         }
 
-        // Try different method names that might exist on the provider
-        let results: any;
-        try {
-            if ('fetchRecentEpisodes' in selectedProvider && typeof selectedProvider.fetchRecentEpisodes === 'function') {
-                results = await selectedProvider.fetchRecentEpisodes();
-            } else if ('fetchRecentlyUpdated' in selectedProvider && typeof selectedProvider.fetchRecentlyUpdated === 'function') {
-                results = await (selectedProvider as any).fetchRecentlyUpdated();
-            } else if ('fetchRecent' in selectedProvider && typeof selectedProvider.fetchRecent === 'function') {
-                results = await (selectedProvider as any).fetchRecent();
-            } else if ('search' in selectedProvider) {
-                // Fallback to search with recent terms
-                results = await selectedProvider.search('2024', 1);
-            } else {
-                throw new Error('Recent episodes not supported for this provider');
-            }
-        } catch (methodError) {
-            // If specific methods fail, try a generic search
-            results = await selectedProvider.search('episode', 1);
-        }
-
-        return results?.results || results || [];
+        // Since gogoanime doesn't have recent methods, use recent/new anime search terms
+        const recentQueries = ['2024 anime', 'new anime', 'latest anime', 'recent anime', 'current season'];
+        const randomQuery = recentQueries[Math.floor(Math.random() * recentQueries.length)];
+        
+        const results = await searchAnimeCore(randomQuery, provider);
+        return results.slice(0, 10);
     } catch (error) {
         console.error('Get recent episodes action error:', error);
         throw new Error(`Failed to get recent episodes: ${error instanceof Error ? error.message : 'Unknown error'}`);
