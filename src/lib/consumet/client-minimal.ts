@@ -1,10 +1,5 @@
 'use client';
 
-import { searchBooks } from '.';
-import { getMovieSources } from '.';
-import { getMovieInfo } from '.';
-import { searchMovies } from '.';
-import { getMangaChapterPages } from '.';
 import {
     searchAnime,
     getAnimeInfo,
@@ -17,11 +12,7 @@ import {
 import type {
     SearchResult,
     AnimeInfo,
-    MangaInfo,
-    MovieInfo,
     EpisodeSource,
-    ChapterPage,
-    MovieSource,
     CacheOptions,
 } from './types';
 
@@ -113,197 +104,11 @@ export async function getAnimeEpisodeSourcesClient(
 }
 
 /**
- * Client-side wrapper for manga search (not available in minimal mode)
- */
-export async function searchMangaClient(): Promise<SearchResult[]> {
-    throw new Error('Manga search is not available in minimal mode');
-}
-
-/**
- * Client-side wrapper for getting manga info (not available in minimal mode)
- */
-export async function getMangaInfoClient(): Promise<MangaInfo> {
-    throw new Error('Manga info is not available in minimal mode');
-}
-
-/**
- * Client-side wrapper for getting manga chapter pages
- * @param chapterId - Chapter ID
- * @param provider - Specific provider to use (optional)
- * @param options - Cache options (optional)
- * @returns Promise that resolves to chapter pages
- */
-export async function getMangaChapterPagesClient(
-    chapterId: string,
-    provider?: string,
-    options?: CacheOptions
-): Promise<ChapterPage[]> {
-    try {
-        const formData = new FormData();
-        formData.append('chapterId', chapterId);
-        if (provider) formData.append('provider', provider);
-        if (options?.ttl) formData.append('cacheTtl', options.ttl.toString());
-
-        return await getMangaChapterPages(formData);
-    } catch (error) {
-        console.error('Get manga chapter pages client error:', error);
-        throw new ConsumetError({
-            message: error instanceof Error ? error.message : 'Failed to get chapter pages',
-            type: 'SOURCE_ERROR',
-            provider,
-        });
-    }
-}
-
-/**
- * Client-side wrapper for movie search
- * @param query - Search query string
- * @param provider - Specific provider to use (optional)
- * @param options - Cache options (optional)
- * @returns Promise that resolves to search results
- */
-export async function searchMoviesClient(
-    query: string,
-    provider?: string,
-    options?: CacheOptions
-): Promise<SearchResult[]> {
-    try {
-        const formData = new FormData();
-        formData.append('query', query);
-        if (provider) formData.append('provider', provider);
-        if (options?.ttl) formData.append('cacheTtl', options.ttl.toString());
-
-        return await searchMovies(formData);
-    } catch (error) {
-        console.error('Search movies client error:', error);
-        throw new ConsumetError({
-            message: error instanceof Error ? error.message : 'Failed to search movies',
-            type: 'SEARCH_ERROR',
-            provider,
-        });
-    }
-}
-
-/**
- * Client-side wrapper for getting movie info
- * @param id - Movie ID
- * @param provider - Specific provider to use (optional)
- * @param options - Cache options (optional)
- * @returns Promise that resolves to movie info
- */
-export async function getMovieInfoClient(
-    id: string,
-    provider?: string,
-    options?: CacheOptions
-): Promise<MovieInfo> {
-    try {
-        const formData = new FormData();
-        formData.append('id', id);
-        if (provider) formData.append('provider', provider);
-        if (options?.ttl) formData.append('cacheTtl', options.ttl.toString());
-
-        return await getMovieInfo(formData);
-    } catch (error) {
-        console.error('Get movie info client error:', error);
-        throw new ConsumetError({
-            message: error instanceof Error ? error.message : 'Failed to get movie info',
-            type: 'INFO_ERROR',
-            provider,
-        });
-    }
-}
-
-/**
- * Client-side wrapper for getting movie sources
- * @param episodeId - Episode/Movie ID
- * @param mediaId - Media ID (optional)
- * @param provider - Specific provider to use (optional)
- * @param options - Cache options (optional)
- * @returns Promise that resolves to movie sources
- */
-export async function getMovieSourcesClient(
-    episodeId: string,
-    mediaId?: string,
-    provider?: string,
-    options?: CacheOptions
-): Promise<MovieSource[]> {
-    try {
-        const formData = new FormData();
-        formData.append('episodeId', episodeId);
-        if (mediaId) formData.append('mediaId', mediaId);
-        if (provider) formData.append('provider', provider);
-        if (options?.ttl) formData.append('cacheTtl', options.ttl.toString());
-
-        return await getMovieSources(formData);
-    } catch (error) {
-        console.error('Get movie sources client error:', error);
-        throw new ConsumetError({
-            message: error instanceof Error ? error.message : 'Failed to get movie sources',
-            type: 'SOURCE_ERROR',
-            provider,
-        });
-    }
-}
-
-/**
- * Client-side wrapper for book search
- * @param query - Search query string
- * @param provider - Specific provider to use (optional)
- * @param options - Cache options (optional)
- * @returns Promise that resolves to search results
- */
-export async function searchBooksClient(
-    query: string,
-    provider?: string,
-    options?: CacheOptions
-): Promise<SearchResult[]> {
-    try {
-        const formData = new FormData();
-        formData.append('query', query);
-        if (provider) formData.append('provider', provider);
-        if (options?.ttl) formData.append('cacheTtl', options.ttl.toString());
-
-        return await searchBooks(formData);
-    } catch (error) {
-        console.error('Search books client error:', error);
-        throw new ConsumetError({
-            message: error instanceof Error ? error.message : 'Failed to search books',
-            type: 'SEARCH_ERROR',
-            provider,
-        });
-    }
-}
-
-/**
  * Client-side utility to get available anime providers
  * @returns Array of available anime provider names
  */
 export function getAnimeProvidersClient(): string[] {
     return getAnimeProviders();
-}
-
-/**
- * Client-side utility to get available manga providers
- * @returns Array of available manga provider names
- */
-export function getMangaProvidersClient(): string[] {
-    return [];
-}
-
-/**
- * Client-side utility to get available movie providers
- * @returns Array of available movie provider names
- */
-export function getMovieProvidersClient(): string[] {
-    return [];
-}
-
-/**
- * Client-side utility to get available book providers
- * @returns Array of available book provider names
- */
-export function getBookProvidersClient(): string[] {
-    return [];
 }
 
 /**

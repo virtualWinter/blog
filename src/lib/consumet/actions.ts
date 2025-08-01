@@ -4,16 +4,9 @@ import {
     searchAnime as searchAnimeCore,
     getAnimeInfo as getAnimeInfoCore,
     getAnimeEpisodeSources as getAnimeEpisodeSourcesCore,
-    searchManga as searchMangaCore,
-    getMangaInfo as getMangaInfoCore,
-    getMangaChapterPages as getMangaChapterPagesCore,
-    searchMovies as searchMoviesCore,
-    getMovieInfo as getMovieInfoCore,
-    getMovieSources as getMovieSourcesCore,
-    searchBooks as searchBooksCore,
     getAllProviders,
     animeProviders,
-} from './index';
+} from './index-minimal';
 import {
     animeSearchSchema,
     mangaSearchSchema,
@@ -183,37 +176,7 @@ export async function getAnimeEpisodeSources(formData: FormData): Promise<Episod
  * @returns Promise that resolves to search results
  */
 export async function searchManga(formData: FormData): Promise<SearchResult[]> {
-    const result = mangaSearchSchema.safeParse({
-        query: formData.get('query'),
-        provider: formData.get('provider'),
-        page: formData.get('page') ? parseInt(formData.get('page') as string) : undefined,
-        perPage: formData.get('perPage') ? parseInt(formData.get('perPage') as string) : undefined,
-    });
-
-    if (!result.success) {
-        throw new Error(result.error.issues[0].message);
-    }
-
-    const { query, provider, page, perPage } = result.data;
-
-    try {
-        // Rate limit search requests: 30 requests per minute per IP
-        const clientIP = await getClientIP();
-        const ipRateLimitResult = await rateLimit(clientIP, {
-            windowMs: 60 * 1000, // 1 minute
-            maxRequests: 30,
-            namespace: 'consumet-search-ip',
-        });
-
-        if (!ipRateLimitResult.success) {
-            throw new Error(formatConsumetRateLimitError(ipRateLimitResult.retryAfter, 'search'));
-        }
-
-        return await searchMangaCore(query, provider);
-    } catch (error) {
-        console.error('Search manga action error:', error);
-        throw new Error(`Failed to search manga: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('Manga search is not available in minimal mode');
 }
 
 /**
@@ -222,35 +185,7 @@ export async function searchManga(formData: FormData): Promise<SearchResult[]> {
  * @returns Promise that resolves to manga info
  */
 export async function getMangaInfo(formData: FormData): Promise<MangaInfo> {
-    const result = mediaInfoSchema.safeParse({
-        id: formData.get('id'),
-        provider: formData.get('provider'),
-    });
-
-    if (!result.success) {
-        throw new Error(result.error.issues[0].message);
-    }
-
-    const { id, provider } = result.data;
-
-    try {
-        // Rate limit info requests: 60 requests per minute per IP
-        const clientIP = await getClientIP();
-        const ipRateLimitResult = await rateLimit(clientIP, {
-            windowMs: 60 * 1000, // 1 minute
-            maxRequests: 60,
-            namespace: 'consumet-info-ip',
-        });
-
-        if (!ipRateLimitResult.success) {
-            throw new Error(formatConsumetRateLimitError(ipRateLimitResult.retryAfter, 'info'));
-        }
-
-        return await getMangaInfoCore(id, provider as any);
-    } catch (error) {
-        console.error('Get manga info action error:', error);
-        throw new Error(`Failed to get manga info: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('Manga info is not available in minimal mode');
 }
 
 /**
@@ -259,35 +194,7 @@ export async function getMangaInfo(formData: FormData): Promise<MangaInfo> {
  * @returns Promise that resolves to chapter pages
  */
 export async function getMangaChapterPages(formData: FormData): Promise<ChapterPage[]> {
-    const result = sourceSchema.safeParse({
-        id: formData.get('chapterId'),
-        provider: formData.get('provider'),
-    });
-
-    if (!result.success) {
-        throw new Error(result.error.issues[0].message);
-    }
-
-    const { id, provider } = result.data;
-
-    try {
-        // Rate limit source requests: 30 requests per minute per IP
-        const clientIP = await getClientIP();
-        const ipRateLimitResult = await rateLimit(clientIP, {
-            windowMs: 60 * 1000, // 1 minute
-            maxRequests: 30,
-            namespace: 'consumet-sources-ip',
-        });
-
-        if (!ipRateLimitResult.success) {
-            throw new Error(formatConsumetRateLimitError(ipRateLimitResult.retryAfter, 'source'));
-        }
-
-        return await getMangaChapterPagesCore(id, provider as any);
-    } catch (error) {
-        console.error('Get manga chapter pages action error:', error);
-        throw new Error(`Failed to get chapter pages: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('Manga chapter pages are not available in minimal mode');
 }
 
 /**
@@ -296,37 +203,7 @@ export async function getMangaChapterPages(formData: FormData): Promise<ChapterP
  * @returns Promise that resolves to search results
  */
 export async function searchMovies(formData: FormData): Promise<SearchResult[]> {
-    const result = movieSearchSchema.safeParse({
-        query: formData.get('query'),
-        provider: formData.get('provider'),
-        page: formData.get('page') ? parseInt(formData.get('page') as string) : undefined,
-        perPage: formData.get('perPage') ? parseInt(formData.get('perPage') as string) : undefined,
-    });
-
-    if (!result.success) {
-        throw new Error(result.error.issues[0].message);
-    }
-
-    const { query, provider, page, perPage } = result.data;
-
-    try {
-        // Rate limit search requests: 30 requests per minute per IP
-        const clientIP = await getClientIP();
-        const ipRateLimitResult = await rateLimit(clientIP, {
-            windowMs: 60 * 1000, // 1 minute
-            maxRequests: 30,
-            namespace: 'consumet-search-ip',
-        });
-
-        if (!ipRateLimitResult.success) {
-            throw new Error(formatConsumetRateLimitError(ipRateLimitResult.retryAfter, 'search'));
-        }
-
-        return await searchMoviesCore(query, provider);
-    } catch (error) {
-        console.error('Search movies action error:', error);
-        throw new Error(`Failed to search movies: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('Movie search is not available in minimal mode');
 }
 
 /**
@@ -335,35 +212,7 @@ export async function searchMovies(formData: FormData): Promise<SearchResult[]> 
  * @returns Promise that resolves to movie info
  */
 export async function getMovieInfo(formData: FormData): Promise<MovieInfo> {
-    const result = mediaInfoSchema.safeParse({
-        id: formData.get('id'),
-        provider: formData.get('provider'),
-    });
-
-    if (!result.success) {
-        throw new Error(result.error.issues[0].message);
-    }
-
-    const { id, provider } = result.data;
-
-    try {
-        // Rate limit info requests: 60 requests per minute per IP
-        const clientIP = await getClientIP();
-        const ipRateLimitResult = await rateLimit(clientIP, {
-            windowMs: 60 * 1000, // 1 minute
-            maxRequests: 60,
-            namespace: 'consumet-info-ip',
-        });
-
-        if (!ipRateLimitResult.success) {
-            throw new Error(formatConsumetRateLimitError(ipRateLimitResult.retryAfter, 'info'));
-        }
-
-        return await getMovieInfoCore(id, provider as any);
-    } catch (error) {
-        console.error('Get movie info action error:', error);
-        throw new Error(`Failed to get movie info: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('Movie info is not available in minimal mode');
 }
 
 /**
@@ -372,36 +221,7 @@ export async function getMovieInfo(formData: FormData): Promise<MovieInfo> {
  * @returns Promise that resolves to movie sources
  */
 export async function getMovieSources(formData: FormData): Promise<MovieSource[]> {
-    const result = sourceSchema.safeParse({
-        id: formData.get('episodeId'),
-        mediaId: formData.get('mediaId'),
-        provider: formData.get('provider'),
-    });
-
-    if (!result.success) {
-        throw new Error(result.error.issues[0].message);
-    }
-
-    const { id, mediaId, provider } = result.data;
-
-    try {
-        // Rate limit source requests: 30 requests per minute per IP
-        const clientIP = await getClientIP();
-        const ipRateLimitResult = await rateLimit(clientIP, {
-            windowMs: 60 * 1000, // 1 minute
-            maxRequests: 30,
-            namespace: 'consumet-sources-ip',
-        });
-
-        if (!ipRateLimitResult.success) {
-            throw new Error(formatConsumetRateLimitError(ipRateLimitResult.retryAfter, 'source'));
-        }
-
-        return await getMovieSourcesCore(id, mediaId, provider as any);
-    } catch (error) {
-        console.error('Get movie sources action error:', error);
-        throw new Error(`Failed to get movie sources: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('Movie sources are not available in minimal mode');
 }
 
 /**
@@ -410,37 +230,7 @@ export async function getMovieSources(formData: FormData): Promise<MovieSource[]
  * @returns Promise that resolves to search results
  */
 export async function searchBooks(formData: FormData): Promise<SearchResult[]> {
-    const result = bookSearchSchema.safeParse({
-        query: formData.get('query'),
-        provider: formData.get('provider'),
-        page: formData.get('page') ? parseInt(formData.get('page') as string) : undefined,
-        perPage: formData.get('perPage') ? parseInt(formData.get('perPage') as string) : undefined,
-    });
-
-    if (!result.success) {
-        throw new Error(result.error.issues[0].message);
-    }
-
-    const { query, provider, page, perPage } = result.data;
-
-    try {
-        // Rate limit search requests: 30 requests per minute per IP
-        const clientIP = await getClientIP();
-        const ipRateLimitResult = await rateLimit(clientIP, {
-            windowMs: 60 * 1000, // 1 minute
-            maxRequests: 30,
-            namespace: 'consumet-search-ip',
-        });
-
-        if (!ipRateLimitResult.success) {
-            throw new Error(formatConsumetRateLimitError(ipRateLimitResult.retryAfter, 'search'));
-        }
-
-        return await searchBooksCore(query, provider);
-    } catch (error) {
-        console.error('Search books action error:', error);
-        throw new Error(`Failed to search books: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('Book search is not available in minimal mode');
 }
 
 /**

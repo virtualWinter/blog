@@ -5,7 +5,7 @@ import { Play, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatEpisodeNumber } from '@/lib/consumet/client';
+import { formatEpisodeNumber } from '@/lib/consumet/client-minimal';
 import type { Episode } from '@/lib/consumet/types';
 
 interface EpisodeListProps {

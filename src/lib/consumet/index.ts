@@ -57,7 +57,7 @@ const newsProviders = {
 };
 
 const comicProviders = {
-  getcomics: new COMICS.getComics(),
+  getcomics: new COMICS.GetComics(),
 };
 
 const lightNovelProviders = {

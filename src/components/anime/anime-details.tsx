@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { getAnimeInfoClient, formatMediaTitle, getImageUrl, formatRating, formatMediaStatus, formatDuration } from '@/lib/consumet/client';
+import { getAnimeInfoClient, formatMediaTitle, getImageUrl, formatRating, formatMediaStatus, formatDuration } from '@/lib/consumet/client-minimal';
 import { EpisodeList } from './episode-list';
 import type { AnimeInfo } from '@/lib/consumet/types';
 

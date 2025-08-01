@@ -7,7 +7,7 @@ import { Play, Star, Calendar, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { formatMediaTitle, getImageUrl, formatRating, truncateText } from '@/lib/consumet/client';
+import { formatMediaTitle, getImageUrl, formatRating, truncateText } from '@/lib/consumet/client-minimal';
 import type { SearchResult } from '@/lib/consumet/types';
 
 interface AnimeCardProps {

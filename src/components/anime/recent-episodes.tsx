@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AnimeCard } from './anime-card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { getAnimeProvidersClient } from '@/lib/consumet/client';
+import { getAnimeProvidersClient } from '@/lib/consumet/client-minimal';
 import type { SearchResult } from '@/lib/consumet/types';
 
 export function RecentEpisodes() {

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { searchAnimeClient, getAnimeProvidersClient } from '@/lib/consumet/client';
+import { searchAnimeClient, getAnimeProvidersClient } from '@/lib/consumet/client-minimal';
 import { AnimeCard } from './anime-card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import type { SearchResult } from '@/lib/consumet/types';
