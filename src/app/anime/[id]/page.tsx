@@ -6,6 +6,7 @@ import { AnimeEpisodes } from '@/components/anime/anime-episodes';
 import { AnimeCharacters } from '@/components/anime/anime-characters';
 import { AnimeRecommendations } from '@/components/anime/anime-recommendations';
 import { AnimeQuickActions } from '@/components/anime/anime-quick-actions';
+import { AnimeDebug } from '@/components/anime/anime-debug';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Breadcrumb,
@@ -64,6 +65,11 @@ export default function AnimePage({ params }: AnimePageProps) {
       </Suspense>
       
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
+        {/* Debug component - remove this after testing */}
+        <Suspense fallback={<div>Loading debug...</div>}>
+          <AnimeDebug animeId={params.id} />
+        </Suspense>
+        
         <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
           <AnimeEpisodes animeId={params.id} />
         </Suspense>

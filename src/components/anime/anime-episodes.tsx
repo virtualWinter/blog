@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAnimeEpisodes } from '@/lib/consumet';
+import { useAnimeInfo } from '@/lib/consumet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,7 +10,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Play, Clock, CheckCircle, Grid, List } from 'lucide-react';
+import { Play, CheckCircle, Grid, List } from 'lucide-react';
 import { 
   getAnimeWatchProgress, 
   getProgressPercentage, 
@@ -23,11 +23,14 @@ interface AnimeEpisodesProps {
 }
 
 export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
-  const { data: episodes, loading, error } = useAnimeEpisodes(animeId);
+  const { data: anime, loading, error } = useAnimeInfo(animeId);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [watchProgress, setWatchProgress] = useState<Record<string, WatchProgress>>({});
   const episodesPerPage = viewMode === 'grid' ? 24 : 50;
+
+  // Extract episodes from anime info
+  const episodes = anime?.episodes || [];
 
   // Load watch progress for this anime
   useEffect(() => {
@@ -69,27 +72,66 @@ export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
     );
   }
 
-  if (error || !episodes?.length) {
-    return null;
+  // If no episodes but we have totalEpisodes, create placeholder episodes
+  const placeholderEpisodes = [];
+  if (!episodes?.length && anime?.totalEpisodes) {
+    for (let i = 1; i <= Math.min(anime.totalEpisodes, 50); i++) {
+      placeholderEpisodes.push({
+        id: `${animeId}-episode-${i}`,
+        number: i,
+        title: `Episode ${i}`,
+        description: null,
+        image: null,
+        releaseDate: null,
+      });
+    }
   }
 
-  const totalPages = Math.ceil(episodes.length / episodesPerPage);
+  const displayEpisodes = episodes?.length ? episodes : placeholderEpisodes;
+
+  if (error) {
+    return (
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold">Episodes</h2>
+        <div className="text-center py-12">
+          <div className="text-destructive text-lg mb-2">Error loading episodes</div>
+          <div className="text-muted-foreground">{error}</div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!displayEpisodes?.length) {
+    return (
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold">Episodes</h2>
+        <div className="text-center py-12">
+          <div className="text-muted-foreground text-lg mb-2">No episodes available</div>
+          <div className="text-muted-foreground">
+            Episodes information is not available for this anime yet.
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const totalPages = Math.ceil(displayEpisodes.length / episodesPerPage);
   const startIndex = (currentPage - 1) * episodesPerPage;
   const endIndex = startIndex + episodesPerPage;
-  const currentEpisodes = episodes.slice(startIndex, endIndex);
+  const currentEpisodes = displayEpisodes.slice(startIndex, endIndex);
 
   // Categorize episodes
-  const continueWatching = episodes.filter(ep => {
+  const continueWatching = displayEpisodes.filter(ep => {
     const progress = watchProgress[ep.id];
     return progress && !progress.completed && progress.currentTime > 30;
   });
 
-  const completed = episodes.filter(ep => {
+  const completed = displayEpisodes.filter(ep => {
     const progress = watchProgress[ep.id];
     return progress && progress.completed;
   });
 
-  const unwatched = episodes.filter(ep => {
+  const unwatched = displayEpisodes.filter(ep => {
     const progress = watchProgress[ep.id];
     return !progress || (progress.currentTime <= 30 && !progress.completed);
   });
@@ -98,7 +140,12 @@ export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
     <section className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">
-          Episodes ({episodes.length})
+          Episodes ({displayEpisodes.length})
+          {!episodes?.length && anime?.totalEpisodes && (
+            <span className="text-sm font-normal text-muted-foreground ml-2">
+              (Generated from total count)
+            </span>
+          )}
         </h2>
         
         <div className="flex items-center gap-2">
@@ -153,6 +200,7 @@ export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
             animeId={animeId} 
             watchProgress={watchProgress}
             viewMode={viewMode}
+            isPlaceholder={!episodes?.length}
           />
         </TabsContent>
 
@@ -163,6 +211,7 @@ export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
               animeId={animeId} 
               watchProgress={watchProgress}
               viewMode={viewMode}
+              isPlaceholder={!episodes?.length}
             />
           </TabsContent>
         )}
@@ -174,6 +223,7 @@ export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
               animeId={animeId} 
               watchProgress={watchProgress}
               viewMode={viewMode}
+              isPlaceholder={!episodes?.length}
             />
           </TabsContent>
         )}
@@ -184,6 +234,7 @@ export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
             animeId={animeId} 
             watchProgress={watchProgress}
             viewMode={viewMode}
+            isPlaceholder={!episodes?.length}
           />
         </TabsContent>
       </Tabs>
@@ -244,9 +295,10 @@ interface EpisodesListProps {
   animeId: string;
   watchProgress: Record<string, WatchProgress>;
   viewMode: 'grid' | 'list';
+  isPlaceholder?: boolean;
 }
 
-function EpisodesList({ episodes, animeId, watchProgress, viewMode }: EpisodesListProps) {
+function EpisodesList({ episodes, animeId, watchProgress, viewMode, isPlaceholder = false }: EpisodesListProps) {
   if (viewMode === 'grid') {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -256,6 +308,7 @@ function EpisodesList({ episodes, animeId, watchProgress, viewMode }: EpisodesLi
             episode={episode} 
             animeId={animeId} 
             progress={watchProgress[episode.id]}
+            isPlaceholder={isPlaceholder}
           />
         ))}
       </div>
@@ -270,6 +323,7 @@ function EpisodesList({ episodes, animeId, watchProgress, viewMode }: EpisodesLi
           episode={episode} 
           animeId={animeId} 
           progress={watchProgress[episode.id]}
+          isPlaceholder={isPlaceholder}
         />
       ))}
     </div>
@@ -280,14 +334,26 @@ interface EpisodeItemProps {
   episode: any;
   animeId: string;
   progress?: WatchProgress;
+  isPlaceholder?: boolean;
 }
 
-function EpisodeCard({ episode, animeId, progress }: EpisodeItemProps) {
+function EpisodeCard({ episode, animeId, progress, isPlaceholder = false }: EpisodeItemProps) {
   const progressPercentage = progress ? getProgressPercentage(progress.currentTime, progress.duration) : 0;
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (isPlaceholder) {
+      e.preventDefault();
+      // You could show a toast or modal here
+      console.log('Episode not available yet');
+    }
+  };
+
   return (
-    <Link href={`/anime/watch/${animeId}/${episode.id}?episode=${episode.number}`}>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer group">
+    <Link 
+      href={isPlaceholder ? '#' : `/anime/watch/${animeId}/${episode.id}?episode=${episode.number}`}
+      onClick={handleClick}
+    >
+      <Card className={`hover:shadow-md transition-shadow cursor-pointer group ${isPlaceholder ? 'opacity-60' : ''}`}>
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             {episode.image && (
@@ -358,12 +424,22 @@ function EpisodeCard({ episode, animeId, progress }: EpisodeItemProps) {
   );
 }
 
-function EpisodeListItem({ episode, animeId, progress }: EpisodeItemProps) {
+function EpisodeListItem({ episode, animeId, progress, isPlaceholder = false }: EpisodeItemProps) {
   const progressPercentage = progress ? getProgressPercentage(progress.currentTime, progress.duration) : 0;
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (isPlaceholder) {
+      e.preventDefault();
+      console.log('Episode not available yet');
+    }
+  };
+
   return (
-    <Link href={`/anime/watch/${animeId}/${episode.id}?episode=${episode.number}`}>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer group">
+    <Link 
+      href={isPlaceholder ? '#' : `/anime/watch/${animeId}/${episode.id}?episode=${episode.number}`}
+      onClick={handleClick}
+    >
+      <Card className={`hover:shadow-md transition-shadow cursor-pointer group ${isPlaceholder ? 'opacity-60' : ''}`}>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             {/* Episode thumbnail */}
