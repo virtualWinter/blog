@@ -59,26 +59,24 @@ import { ConsumetClient } from '@/lib/consumet';
 
 const client = new ConsumetClient('https://animeapi.vwinter.moe');
 
-// Search anime
+// AniList-based endpoints
 const results = await client.search('attack on titan', 1, 20);
-
-// Get anime info
 const anime = await client.getAnimeInfo('16498');
-
-// Get streaming links
 const links = await client.getStreamingLinks('episode-id');
-
-// Get trending anime
 const trending = await client.getTrending();
-
-// Get popular anime
 const popular = await client.getPopular();
+
+// Crunchyroll-specific endpoints
+const crunchyrollResults = await client.searchCrunchyroll('one piece');
+const crunchyrollAnime = await client.getCrunchyrollAnimeInfo('anime-id', 'series');
+const crunchyrollLinks = await client.getCrunchyrollStreamingLinks('episode-id');
 ```
 
 ### Available Methods
 
 #### Search & Discovery
-- `search(query, page?, perPage?, filters?)` - Search anime
+- `search(query, page?, perPage?, filters?)` - Search anime (AniList)
+- `searchCrunchyroll(query, page?)` - Search Crunchyroll anime
 - `advancedSearch(filters)` - Advanced search with multiple filters
 - `getTrending(page?, perPage?)` - Get trending anime
 - `getPopular(page?, perPage?)` - Get popular anime
@@ -86,9 +84,11 @@ const popular = await client.getPopular();
 - `getRecentEpisodes(page?, perPage?, provider?)` - Get recent episodes
 
 #### Anime Information
-- `getAnimeInfo(id, provider?)` - Get detailed anime information
+- `getAnimeInfo(id, provider?)` - Get detailed anime information (AniList)
+- `getCrunchyrollAnimeInfo(id, type?)` - Get Crunchyroll anime information
 - `getEpisodes(animeId, provider?)` - Get anime episodes
-- `getStreamingLinks(episodeId, provider?)` - Get episode streaming links
+- `getStreamingLinks(episodeId, provider?)` - Get episode streaming links (AniList)
+- `getCrunchyrollStreamingLinks(episodeId)` - Get Crunchyroll streaming links
 
 #### Categorization
 - `getAnimeByGenre(genres, page?, perPage?)` - Get anime by genre
@@ -99,10 +99,17 @@ const popular = await client.getPopular();
 
 ### Search Hooks
 ```typescript
-import { useAnimeSearch, useAdvancedSearch } from '@/lib/consumet';
+import { 
+  useAnimeSearch, 
+  useAdvancedSearch, 
+  useCrunchyrollSearch 
+} from '@/lib/consumet';
 
-// Basic search
+// AniList search
 const { data, loading, error } = useAnimeSearch('naruto');
+
+// Crunchyroll search
+const { data: crunchyrollData } = useCrunchyrollSearch('one piece');
 
 // Advanced search with filters
 const { data, loading, error } = useAdvancedSearch({
@@ -115,16 +122,22 @@ const { data, loading, error } = useAdvancedSearch({
 
 ### Information Hooks
 ```typescript
-import { useAnimeInfo, useAnimeEpisodes, useStreamingLinks } from '@/lib/consumet';
+import { 
+  useAnimeInfo, 
+  useAnimeEpisodes, 
+  useStreamingLinks,
+  useCrunchyrollAnimeInfo,
+  useCrunchyrollStreamingLinks 
+} from '@/lib/consumet';
 
-// Get anime details
+// AniList anime details
 const { data: anime } = useAnimeInfo('21');
-
-// Get episodes
 const { data: episodes } = useAnimeEpisodes('21');
-
-// Get streaming links
 const { data: links } = useStreamingLinks('episode-id');
+
+// Crunchyroll anime details
+const { data: crunchyrollAnime } = useCrunchyrollAnimeInfo('anime-id', 'series');
+const { data: crunchyrollLinks } = useCrunchyrollStreamingLinks('episode-id');
 ```
 
 ### Discovery Hooks
@@ -262,11 +275,37 @@ interface SearchFilters {
 
 ## Examples
 
+### AniList Components
 Check the `examples/` directory for complete component examples:
 
 - `anime-search.tsx` - Search interface with filters
 - `trending-anime.tsx` - Trending anime grid
 - `anime-details.tsx` - Detailed anime information page
+
+### Crunchyroll Components
+New Crunchyroll-specific components:
+
+- `CrunchyrollSearch` - Search Crunchyroll anime catalog
+- `CrunchyrollAnimeInfo` - Display detailed Crunchyroll anime information
+- `AnimeWatchPage` - Updated to support both AniList and Crunchyroll providers
+
+```typescript
+// Using Crunchyroll components
+import { CrunchyrollSearch, CrunchyrollAnimeInfo } from '@/components/anime';
+
+// Search component
+<CrunchyrollSearch />
+
+// Anime info component
+<CrunchyrollAnimeInfo animeId="anime-id" type="series" />
+
+// Watch page with Crunchyroll provider
+<AnimeWatchPage 
+  animeId="anime-id" 
+  episodeId="episode-id" 
+  provider="crunchyroll" 
+/>
+```
 
 ## Error Handling
 
@@ -319,8 +358,9 @@ setInterval(() => {
 
 ## API Endpoints
 
-The library supports all major Consumet API endpoints:
+The library supports both AniList and Crunchyroll API endpoints:
 
+### AniList Endpoints
 - `/meta/anilist/{query}` - Search anime
 - `/meta/anilist/info/{id}` - Anime information
 - `/meta/anilist/watch/{episodeId}` - Streaming links
@@ -331,6 +371,11 @@ The library supports all major Consumet API endpoints:
 - `/meta/anilist/genre` - Genre-based search
 - `/meta/anilist/advanced-search` - Advanced search
 - `/meta/anilist/airing-schedule` - Airing schedule
+
+### Crunchyroll Endpoints
+- `/anime/crunchyroll/{query}` - Search Crunchyroll anime
+- `/anime/crunchyroll/info/{id}?type={type}` - Crunchyroll anime information
+- `/anime/crunchyroll/watch/{episodeId}` - Crunchyroll streaming links
 
 ## Contributing
 

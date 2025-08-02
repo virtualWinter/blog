@@ -16,9 +16,10 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 interface AnimeGridProps {
   anime: AnimeInfo[];
   showRanking?: boolean;
+  provider?: 'anilist' | 'crunchyroll';
 }
 
-export function AnimeGrid({ anime, showRanking = false }: AnimeGridProps) {
+export function AnimeGrid({ anime, showRanking = false, provider = 'anilist' }: AnimeGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {anime.map((item, index) => (
@@ -26,6 +27,7 @@ export function AnimeGrid({ anime, showRanking = false }: AnimeGridProps) {
           key={item.id}
           anime={item}
           ranking={showRanking ? index + 1 : undefined}
+          provider={provider}
         />
       ))}
     </div>
@@ -35,11 +37,14 @@ export function AnimeGrid({ anime, showRanking = false }: AnimeGridProps) {
 interface AnimeCardProps {
   anime: AnimeInfo;
   ranking?: number;
+  provider?: 'anilist' | 'crunchyroll';
 }
 
-function AnimeCard({ anime, ranking }: AnimeCardProps) {
+function AnimeCard({ anime, ranking, provider = 'anilist' }: AnimeCardProps) {
+  const animeUrl = provider === 'crunchyroll' ? `/anime/crunchyroll/${anime.id}` : `/anime/${anime.id}`;
+  
   return (
-    <Link href={`/anime/${anime.id}`}>
+    <Link href={animeUrl}>
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-105 group">
         <div className="relative">
           <AspectRatio ratio={3 / 4}>

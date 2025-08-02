@@ -68,6 +68,13 @@ export class ConsumetClient {
     return withCache(cacheKey, () => this.fetchApi<SearchResult>(endpoint));
   }
 
+  // Search Crunchyroll anime
+  async searchCrunchyroll(query: string, page: number = 1): Promise<SearchResult> {
+    const endpoint = `/anime/crunchyroll/${encodeURIComponent(query)}?page=${page}`;
+    const cacheKey = consumetCache.generateKey(endpoint);
+    return withCache(cacheKey, () => this.fetchApi<SearchResult>(endpoint));
+  }
+
   // Get anime info by ID
   async getAnimeInfo(id: string, provider: string = 'gogoanime'): Promise<AnimeInfo> {
     const endpoint = `/meta/anilist/info/${id}?provider=${provider}`;
@@ -75,9 +82,21 @@ export class ConsumetClient {
     return withCache(cacheKey, () => this.fetchApi<AnimeInfo>(endpoint), 10 * 60 * 1000); // 10 minutes cache
   }
 
+  // Get Crunchyroll anime info by ID
+  async getCrunchyrollAnimeInfo(id: string, type: 'series' | 'movie' = 'series'): Promise<AnimeInfo> {
+    const endpoint = `/anime/crunchyroll/info/${id}?type=${type}`;
+    const cacheKey = consumetCache.generateKey(endpoint);
+    return withCache(cacheKey, () => this.fetchApi<AnimeInfo>(endpoint), 10 * 60 * 1000); // 10 minutes cache
+  }
+
   // Get streaming links for an episode
   async getStreamingLinks(episodeId: string, provider: string = 'gogoanime'): Promise<StreamingLinks> {
     return this.fetchApi<StreamingLinks>(`/meta/anilist/watch/${episodeId}?provider=${provider}`);
+  }
+
+  // Get Crunchyroll streaming links for an episode
+  async getCrunchyrollStreamingLinks(episodeId: string): Promise<StreamingLinks> {
+    return this.fetchApi<StreamingLinks>(`/anime/crunchyroll/watch/${episodeId}`);
   }
 
   // Get trending anime

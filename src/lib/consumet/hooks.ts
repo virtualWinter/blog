@@ -186,3 +186,29 @@ export function useAiringSchedule(
     [page, perPage, weekStart, weekEnd, notYetAired]
   );
 }
+
+// Crunchyroll-specific hooks
+
+// Hook for Crunchyroll anime search
+export function useCrunchyrollSearch(query: string, page: number = 1) {
+  return useApiCall<SearchResult>(
+    () => consumetApi.searchCrunchyroll(query, page),
+    [query, page]
+  );
+}
+
+// Hook for Crunchyroll anime info
+export function useCrunchyrollAnimeInfo(id: string, type: 'series' | 'movie' = 'series') {
+  return useApiCall<AnimeInfo>(
+    () => consumetApi.getCrunchyrollAnimeInfo(id, type),
+    [id, type]
+  );
+}
+
+// Hook for Crunchyroll streaming links
+export function useCrunchyrollStreamingLinks(episodeId: string) {
+  return useApiCall<StreamingLinks>(
+    () => consumetApi.getCrunchyrollStreamingLinks(episodeId),
+    [episodeId]
+  );
+}
