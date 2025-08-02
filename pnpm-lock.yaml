@@ -125,9 +125,6 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
-      developer-portfolio:
-        specifier: 'link:'
-        version: 'link:'
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.1.0)
