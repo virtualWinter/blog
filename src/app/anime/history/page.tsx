@@ -79,13 +79,13 @@ export default function WatchHistoryPage() {
   const completed = watchHistory.filter(p => p.completed);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
+    <div className="min-h-screen">
+      <div className="border-b">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Watch History</h1>
-              <p className="text-lg text-gray-600">
+              <h1 className="text-3xl font-bold mb-4">Watch History</h1>
+              <p className="text-lg text-muted-foreground">
                 Track your anime watching progress and statistics
               </p>
             </div>
@@ -120,50 +120,50 @@ export default function WatchHistoryPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-6 shadow-sm border">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Play className="h-5 w-5 text-blue-600" />
+              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <Play className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.totalEpisodes}</div>
-                <div className="text-sm text-gray-600">Episodes Watched</div>
+                <div className="text-2xl font-bold">{stats.totalEpisodes}</div>
+                <div className="text-sm text-muted-foreground">Episodes Watched</div>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-6 shadow-sm border">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.completedEpisodes}</div>
-                <div className="text-sm text-gray-600">Completed</div>
+                <div className="text-2xl font-bold">{stats.completedEpisodes}</div>
+                <div className="text-sm text-muted-foreground">Completed</div>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-6 shadow-sm border">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Clock className="h-5 w-5 text-purple-600" />
+              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                <Clock className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.totalWatchTime}m</div>
-                <div className="text-sm text-gray-600">Watch Time</div>
+                <div className="text-2xl font-bold">{stats.totalWatchTime}m</div>
+                <div className="text-sm text-muted-foreground">Watch Time</div>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-6 shadow-sm border">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <div className="h-5 w-5 bg-orange-600 rounded" />
+              <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
+                <div className="h-5 w-5 bg-orange-600 dark:bg-orange-400 rounded" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.uniqueAnime}</div>
-                <div className="text-sm text-gray-600">Unique Anime</div>
+                <div className="text-2xl font-bold">{stats.uniqueAnime}</div>
+                <div className="text-sm text-muted-foreground">Unique Anime</div>
               </div>
             </div>
           </div>
@@ -186,8 +186,8 @@ export default function WatchHistoryPage() {
           <TabsContent value="continue" className="space-y-4">
             {continueWatching.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-gray-500 text-lg mb-2">No episodes in progress</div>
-                <div className="text-gray-400">Start watching an anime to see it here</div>
+                <div className="text-muted-foreground text-lg mb-2">No episodes in progress</div>
+                <div className="text-muted-foreground">Start watching an anime to see it here</div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -201,8 +201,8 @@ export default function WatchHistoryPage() {
           <TabsContent value="completed" className="space-y-4">
             {completed.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-gray-500 text-lg mb-2">No completed episodes</div>
-                <div className="text-gray-400">Complete watching an episode to see it here</div>
+                <div className="text-muted-foreground text-lg mb-2">No completed episodes</div>
+                <div className="text-muted-foreground">Complete watching an episode to see it here</div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -216,8 +216,8 @@ export default function WatchHistoryPage() {
           <TabsContent value="all" className="space-y-4">
             {watchHistory.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-gray-500 text-lg mb-2">No watch history</div>
-                <div className="text-gray-400">Start watching anime to build your history</div>
+                <div className="text-muted-foreground text-lg mb-2">No watch history</div>
+                <div className="text-muted-foreground">Start watching anime to build your history</div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -239,11 +239,11 @@ function WatchHistoryCard({ progress }: { progress: WatchProgress }) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
-        <div className="w-full h-32 bg-gray-200" />
+      <div className="bg-card rounded-lg shadow-sm overflow-hidden border animate-pulse">
+        <div className="w-full h-32 bg-muted" />
         <div className="p-4 space-y-2">
-          <div className="h-4 bg-gray-200 rounded" />
-          <div className="h-3 bg-gray-200 rounded w-3/4" />
+          <div className="h-4 bg-muted rounded" />
+          <div className="h-3 bg-muted rounded w-3/4" />
         </div>
       </div>
     );
@@ -252,7 +252,7 @@ function WatchHistoryCard({ progress }: { progress: WatchProgress }) {
   if (!anime) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+    <div className="bg-card rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow border">
       <div className="relative">
         <img
           src={getImageUrl(anime.image)}
@@ -262,16 +262,13 @@ function WatchHistoryCard({ progress }: { progress: WatchProgress }) {
         
         {progress.completed && (
           <div className="absolute top-2 right-2">
-            <Badge className="bg-green-500">Completed</Badge>
+            <Badge className="bg-green-500 hover:bg-green-500">Completed</Badge>
           </div>
         )}
 
         {/* Progress Bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black bg-opacity-30">
-          <div 
-            className="h-full bg-blue-500"
-            style={{ width: `${progressPercentage}%` }}
-          />
+        <div className="absolute bottom-0 left-0 right-0">
+          <Progress value={progressPercentage} className="h-1 rounded-none" />
         </div>
       </div>
       
@@ -280,16 +277,16 @@ function WatchHistoryCard({ progress }: { progress: WatchProgress }) {
           {formatAnimeTitle(anime.title)}
         </h3>
         
-        <div className="text-xs text-gray-600 mb-2">
+        <div className="text-xs text-muted-foreground mb-2">
           Episode {progress.episodeNumber}
         </div>
         
-        <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
+        <div className="flex justify-between items-center text-xs text-muted-foreground mb-3">
           <span>{formatWatchTime(progress.currentTime)} / {formatWatchTime(progress.duration)}</span>
           <span>{progressPercentage}%</span>
         </div>
 
-        <div className="text-xs text-gray-400 mb-3">
+        <div className="text-xs text-muted-foreground mb-3">
           {new Date(progress.lastWatched).toLocaleDateString()}
         </div>
         
