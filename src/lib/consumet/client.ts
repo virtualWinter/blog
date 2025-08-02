@@ -15,7 +15,7 @@ import { consumetCache, withCache } from './cache';
 export class ConsumetClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = 'https://animeapi.vwinter.moe') {
+  constructor(baseUrl: string = 'http://portfolio-animeapi-nvlyyj:3000') {
     this.baseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
   }
 
