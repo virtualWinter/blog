@@ -9,7 +9,7 @@ import { formatAnimeTitle, getImageUrl } from '@/lib/consumet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, ExternalLink, Download, Share2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Download, Share2, Play, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AnimeWatchPageProps {
@@ -233,41 +233,64 @@ export function AnimeWatchPage({ animeId, episodeId, episodeNumber }: AnimeWatch
           {/* Episode List Sidebar */}
           <div className="space-y-4">
             <div className="bg-gray-900 rounded-lg p-4">
-              <h3 className="font-semibold mb-4">Episodes</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">Episodes</h3>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href={`/anime/${animeId}`} className="text-xs">
+                    View All
+                  </Link>
+                </Button>
+              </div>
               
               <ScrollArea className="h-96">
                 <div className="space-y-2">
-                  {anime?.episodes?.map((episode) => (
-                    <button
-                      key={episode.id}
-                      onClick={() => handleEpisodeSelect(episode)}
-                      className={`w-full text-left p-3 rounded-lg transition-colors ${
-                        episode.id === episodeId
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-800 hover:bg-gray-700'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        {episode.image && (
-                          <img
-                            src={episode.image}
-                            alt={`Episode ${episode.number}`}
-                            className="w-12 h-8 object-cover rounded flex-shrink-0"
-                          />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm">
-                            Episode {episode.number}
-                          </div>
-                          {episode.title && (
-                            <div className="text-xs text-gray-400 line-clamp-2 mt-1">
-                              {episode.title}
+                  {anime?.episodes?.map((episode) => {
+                    // Get watch progress for this episode (you can implement this)
+                    const isWatched = false; // Placeholder - implement with your progress tracking
+                    const isCurrentlyWatching = episode.id === episodeId;
+                    
+                    return (
+                      <button
+                        key={episode.id}
+                        onClick={() => handleEpisodeSelect(episode)}
+                        className={`w-full text-left p-3 rounded-lg transition-colors relative ${
+                          isCurrentlyWatching
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-800 hover:bg-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {episode.image && (
+                            <div className="relative">
+                              <img
+                                src={episode.image}
+                                alt={`Episode ${episode.number}`}
+                                className="w-12 h-8 object-cover rounded flex-shrink-0"
+                              />
+                              {isWatched && (
+                                <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-0.5">
+                                  <CheckCircle className="h-3 w-3 text-white" />
+                                </div>
+                              )}
                             </div>
                           )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm flex items-center gap-2">
+                              Episode {episode.number}
+                              {isCurrentlyWatching && (
+                                <Play className="h-3 w-3" />
+                              )}
+                            </div>
+                            {episode.title && (
+                              <div className="text-xs text-gray-400 line-clamp-2 mt-1">
+                                {episode.title}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </div>
