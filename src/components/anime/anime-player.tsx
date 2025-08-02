@@ -22,7 +22,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { VideoSource, Subtitle } from '@/lib/consumet/types';
+import { VideoSource } from '@/lib/consumet/types';
 import { updateWatchTime, getWatchProgress, markEpisodeCompleted } from '@/lib/anime/watch-progress';
 
 // Dynamically import ReactPlayer to avoid SSR issues
@@ -30,7 +30,6 @@ const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
 
 interface AnimePlayerProps {
   sources: VideoSource[];
-  subtitles?: Subtitle[];
   title?: string;
   episodeNumber?: number;
   animeId?: string;
@@ -43,7 +42,6 @@ interface AnimePlayerProps {
 
 export function AnimePlayer({
   sources,
-  subtitles = [],
   title,
   episodeNumber,
   animeId,
@@ -267,13 +265,6 @@ export function AnimePlayer({
             attributes: {
               crossOrigin: 'anonymous',
             },
-            tracks: subtitles.map((sub, index) => ({
-              kind: 'subtitles',
-              src: sub.url,
-              srcLang: sub.lang,
-              label: sub.lang,
-              default: index === 0,
-            })),
           },
         }}
       />

@@ -2,20 +2,16 @@ import {
   AnimeInfo,
   SearchResult,
   StreamingLinks,
-  TrendingResult,
-  PopularResult,
   RecentEpisodesResult,
-  SearchFilters,
   Episode,
-  GenreList,
-  ProducerInfo,
+  ServerList,
 } from './types';
 import { consumetCache, withCache } from './cache';
 
 export class ConsumetClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = 'https://test10101010101.vercel.app') {
+  constructor(baseUrl: string = 'https://consumet-api.vercel.app') {
     this.baseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
   }
 
@@ -43,163 +39,53 @@ export class ConsumetClient {
   }
 
   // Search anime
-  async search(
-    query: string, 
-    page: number = 1, 
-    perPage: number = 20,
-    filters?: SearchFilters
-  ): Promise<SearchResult> {
-    let endpoint = `/meta/anilist/${encodeURIComponent(query)}?page=${page}&perPage=${perPage}`;
-    
-    if (filters) {
-      const params = new URLSearchParams();
-      if (filters.genres?.length) params.append('genres', JSON.stringify(filters.genres));
-      if (filters.year) params.append('year', filters.year.toString());
-      if (filters.season) params.append('season', filters.season);
-      if (filters.format) params.append('format', filters.format);
-      if (filters.status) params.append('status', filters.status);
-      if (filters.sort?.length) params.append('sort', JSON.stringify(filters.sort));
-      
-      const paramString = params.toString();
-      if (paramString) endpoint += `&${paramString}`;
-    }
-
+  async search(query: string, page: number = 1): Promise<SearchResult> {
+    const endpoint = `/anime/gogoanime/${encodeURIComponent(query)}?page=${page}`;
     const cacheKey = consumetCache.generateKey(endpoint);
     return withCache(cacheKey, () => this.fetchApi<SearchResult>(endpoint));
   }
 
-  // Search Crunchyroll anime
-  async searchCrunchyroll(query: string, page: number = 1): Promise<SearchResult> {
-    const endpoint = `/anime/crunchyroll/${encodeURIComponent(query)}?page=${page}`;
-    const cacheKey = consumetCache.generateKey(endpoint);
-    return withCache(cacheKey, () => this.fetchApi<SearchResult>(endpoint));
-  }
+
 
   // Get anime info by ID
-  async getAnimeInfo(id: string, provider: string = 'gogoanime'): Promise<AnimeInfo> {
-    const endpoint = `/meta/anilist/info/${id}?provider=${provider}`;
+  async getAnimeInfo(id: string): Promise<AnimeInfo> {
+    const endpoint = `/anime/gogoanime/info/${id}`;
     const cacheKey = consumetCache.generateKey(endpoint);
     return withCache(cacheKey, () => this.fetchApi<AnimeInfo>(endpoint), 10 * 60 * 1000); // 10 minutes cache
   }
 
-  // Get Crunchyroll anime info by ID
-  async getCrunchyrollAnimeInfo(id: string, type: 'series' | 'movie' = 'series'): Promise<AnimeInfo> {
-    const endpoint = `/anime/crunchyroll/info/${id}?type=${type}`;
-    const cacheKey = consumetCache.generateKey(endpoint);
-    return withCache(cacheKey, () => this.fetchApi<AnimeInfo>(endpoint), 10 * 60 * 1000); // 10 minutes cache
+
+
+  // Get available servers for an episode
+  async getEpisodeServers(episodeId: string): Promise<ServerList> {
+    return this.fetchApi<ServerList>(`/anime/gogoanime/servers/${episodeId}`);
   }
 
   // Get streaming links for an episode
-  async getStreamingLinks(episodeId: string, provider: string = 'gogoanime'): Promise<StreamingLinks> {
-    return this.fetchApi<StreamingLinks>(`/meta/anilist/watch/${episodeId}?provider=${provider}`);
+  async getStreamingLinks(episodeId: string, server: string = 'vidstreaming'): Promise<StreamingLinks> {
+    return this.fetchApi<StreamingLinks>(`/anime/gogoanime/watch/${episodeId}?server=${server}`);
   }
 
-  // Get Crunchyroll streaming links for an episode
-  async getCrunchyrollStreamingLinks(episodeId: string): Promise<StreamingLinks> {
-    return this.fetchApi<StreamingLinks>(`/anime/crunchyroll/watch/${episodeId}`);
-  }
 
-  // Get trending anime
-  async getTrending(page: number = 1, perPage: number = 20): Promise<TrendingResult> {
-    return this.fetchApi<TrendingResult>(`/meta/anilist/trending?page=${page}&perPage=${perPage}`);
-  }
 
-  // Get popular anime
-  async getPopular(page: number = 1, perPage: number = 20): Promise<PopularResult> {
-    return this.fetchApi<PopularResult>(`/meta/anilist/popular?page=${page}&perPage=${perPage}`);
+  // Get top airing anime
+  async getTopAiring(page: number = 1): Promise<SearchResult> {
+    const endpoint = `/anime/gogoanime/top-airing?page=${page}`;
+    const cacheKey = consumetCache.generateKey(endpoint);
+    return withCache(cacheKey, () => this.fetchApi<SearchResult>(endpoint));
   }
 
   // Get recent episodes
-  async getRecentEpisodes(page: number = 1, perPage: number = 20, provider: string = 'gogoanime'): Promise<RecentEpisodesResult> {
-    return this.fetchApi<RecentEpisodesResult>(`/meta/anilist/recent-episodes?page=${page}&perPage=${perPage}&provider=${provider}`);
+  async getRecentEpisodes(page: number = 1, type: number = 1): Promise<RecentEpisodesResult> {
+    const endpoint = `/anime/gogoanime/recent-episodes?page=${page}&type=${type}`;
+    const cacheKey = consumetCache.generateKey(endpoint);
+    return withCache(cacheKey, () => this.fetchApi<RecentEpisodesResult>(endpoint));
   }
 
-  // Get anime by genre
-  async getAnimeByGenre(
-    genres: string[], 
-    page: number = 1, 
-    perPage: number = 20
-  ): Promise<SearchResult> {
-    const genreString = genres.join(',');
-    return this.fetchApi<SearchResult>(`/meta/anilist/genre?genres=${encodeURIComponent(genreString)}&page=${page}&perPage=${perPage}`);
-  }
-
-  // Get random anime
-  async getRandomAnime(): Promise<AnimeInfo> {
-    return this.fetchApi<AnimeInfo>('/meta/anilist/random-anime');
-  }
-
-  // Advanced search with multiple filters
-  async advancedSearch(filters: {
-    query?: string;
-    type?: string;
-    page?: number;
-    perPage?: number;
-    season?: string;
-    format?: string;
-    sort?: string[];
-    genres?: string[];
-    id?: string;
-    year?: number;
-    status?: string;
-  }): Promise<SearchResult> {
-    const params = new URLSearchParams();
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (Array.isArray(value)) {
-          params.append(key, JSON.stringify(value));
-        } else {
-          params.append(key, value.toString());
-        }
-      }
-    });
-
-    const endpoint = `/meta/anilist/advanced-search?${params.toString()}`;
-    return this.fetchApi<SearchResult>(endpoint);
-  }
-
-  // Get anime episodes
-  async getEpisodes(animeId: string, provider: string = 'gogoanime'): Promise<Episode[]> {
-    const animeInfo = await this.getAnimeInfo(animeId, provider);
+  // Get anime episodes (from anime info)
+  async getEpisodes(animeId: string): Promise<Episode[]> {
+    const animeInfo = await this.getAnimeInfo(animeId);
     return animeInfo.episodes || [];
-  }
-
-  // Get available genres
-  async getGenres(): Promise<GenreList[]> {
-    return this.fetchApi<GenreList[]>('/meta/anilist/genre');
-  }
-
-  // Get anime by producer/studio
-  async getAnimeByProducer(producerId: string, page: number = 1, perPage: number = 20): Promise<SearchResult> {
-    return this.fetchApi<SearchResult>(`/meta/anilist/producer/${producerId}?page=${page}&perPage=${perPage}`);
-  }
-
-  // Get seasonal anime
-  async getSeasonalAnime(
-    year: number, 
-    season: 'WINTER' | 'SPRING' | 'SUMMER' | 'FALL',
-    page: number = 1,
-    perPage: number = 20
-  ): Promise<SearchResult> {
-    return this.fetchApi<SearchResult>(`/meta/anilist/season/${year}/${season}?page=${page}&perPage=${perPage}`);
-  }
-
-  // Get anime airing schedule
-  async getAiringSchedule(
-    page: number = 1,
-    perPage: number = 20,
-    weekStart?: number,
-    weekEnd?: number,
-    notYetAired?: boolean
-  ): Promise<SearchResult> {
-    let endpoint = `/meta/anilist/airing-schedule?page=${page}&perPage=${perPage}`;
-    
-    if (weekStart !== undefined) endpoint += `&weekStart=${weekStart}`;
-    if (weekEnd !== undefined) endpoint += `&weekEnd=${weekEnd}`;
-    if (notYetAired !== undefined) endpoint += `&notYetAired=${notYetAired}`;
-
-    return this.fetchApi<SearchResult>(endpoint);
   }
 }
 

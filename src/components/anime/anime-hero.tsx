@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useCrunchyrollSearch } from '@/lib/consumet';
+import { useTrendingAnime } from '@/lib/consumet';
 import { formatAnimeTitle, getImageUrl, truncateDescription } from '@/lib/consumet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export function AnimeHero() {
-  const { data } = useCrunchyrollSearch('popular', 1);
+  const { data } = useTrendingAnime(1, 5);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -70,12 +70,12 @@ export function AnimeHero() {
 
             <div className="flex gap-4">
               <Button asChild size="lg">
-                <Link href={`/anime/crunchyroll/${currentAnime.id}`}>
+                <Link href={`/anime/${currentAnime.id}`}>
                   View Details
                 </Link>
               </Button>
               <Button asChild variant="secondary" size="lg" className="bg-white/20 text-white hover:bg-white/30">
-                <Link href="/anime/crunchyroll">
+                <Link href="/anime/search">
                   Browse More
                 </Link>
               </Button>

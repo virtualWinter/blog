@@ -1,16 +1,14 @@
-# Consumet API Library
+# GogoAnime API Library
 
-A comprehensive TypeScript library for interacting with the Consumet API (https://animeapi.vwinter.moe/), providing anime information, search functionality, and streaming data.
+A TypeScript library for interacting with the GogoAnime provider through the Consumet API, providing anime information, search functionality, and streaming data.
 
 ## Features
 
-- 🔍 **Search anime** with advanced filters
-- 📺 **Get anime information** including episodes, characters, and relations
-- 🎬 **Streaming links** for episodes
-- 📈 **Trending and popular** anime lists
+- 🔍 **Search anime** on GogoAnime
+- 📺 **Get anime information** including episodes and details
+- 🎬 **Streaming links** for episodes with server selection
+- 🔥 **Top airing** anime lists
 - 🆕 **Recent episodes** tracking
-- 🎭 **Genre-based** filtering
-- 📅 **Seasonal anime** discovery
 - ⚡ **Built-in caching** for better performance
 - 🪝 **React hooks** for easy integration
 - 🛠️ **Utility functions** for data formatting
@@ -26,7 +24,7 @@ import { consumetApi, useAnimeSearch, formatAnimeTitle } from '@/lib/consumet';
 
 // Using the client directly
 const searchResults = await consumetApi.search('naruto');
-const animeInfo = await consumetApi.getAnimeInfo('21');
+const animeInfo = await consumetApi.getAnimeInfo('naruto-dub');
 
 // Using React hooks
 function AnimeSearch() {
@@ -57,109 +55,79 @@ The main client class for making API calls:
 ```typescript
 import { ConsumetClient } from '@/lib/consumet';
 
-const client = new ConsumetClient('https://animeapi.vwinter.moe');
+const client = new ConsumetClient('https://consumet-api.vercel.app');
 
-// AniList-based endpoints
-const results = await client.search('attack on titan', 1, 20);
-const anime = await client.getAnimeInfo('16498');
-const links = await client.getStreamingLinks('episode-id');
-const trending = await client.getTrending();
-const popular = await client.getPopular();
+// Search anime
+const results = await client.search('attack on titan', 1);
 
-// Crunchyroll-specific endpoints
-const crunchyrollResults = await client.searchCrunchyroll('one piece');
-const crunchyrollAnime = await client.getCrunchyrollAnimeInfo('anime-id', 'series');
-const crunchyrollLinks = await client.getCrunchyrollStreamingLinks('episode-id');
+// Get anime info
+const anime = await client.getAnimeInfo('shingeki-no-kyojin');
+
+// Get episode servers
+const servers = await client.getEpisodeServers('shingeki-no-kyojin-episode-1');
+
+// Get streaming links
+const links = await client.getStreamingLinks('shingeki-no-kyojin-episode-1', 'vidstreaming');
+
+// Get top airing anime
+const topAiring = await client.getTopAiring();
+
+// Get recent episodes
+const recent = await client.getRecentEpisodes();
 ```
 
 ### Available Methods
 
 #### Search & Discovery
-- `search(query, page?, perPage?, filters?)` - Search anime (AniList)
-- `searchCrunchyroll(query, page?)` - Search Crunchyroll anime
-- `advancedSearch(filters)` - Advanced search with multiple filters
-- `getTrending(page?, perPage?)` - Get trending anime
-- `getPopular(page?, perPage?)` - Get popular anime
-- `getRandomAnime()` - Get random anime
-- `getRecentEpisodes(page?, perPage?, provider?)` - Get recent episodes
+- `search(query, page?)` - Search anime on GogoAnime
+- `getTopAiring(page?)` - Get top airing anime
+- `getRecentEpisodes(page?, type?)` - Get recent episodes
 
 #### Anime Information
-- `getAnimeInfo(id, provider?)` - Get detailed anime information (AniList)
-- `getCrunchyrollAnimeInfo(id, type?)` - Get Crunchyroll anime information
-- `getEpisodes(animeId, provider?)` - Get anime episodes
-- `getStreamingLinks(episodeId, provider?)` - Get episode streaming links (AniList)
-- `getCrunchyrollStreamingLinks(episodeId)` - Get Crunchyroll streaming links
-
-#### Categorization
-- `getAnimeByGenre(genres, page?, perPage?)` - Get anime by genre
-- `getSeasonalAnime(year, season, page?, perPage?)` - Get seasonal anime
-- `getAiringSchedule(page?, perPage?, weekStart?, weekEnd?, notYetAired?)` - Get airing schedule
+- `getAnimeInfo(id)` - Get detailed anime information
+- `getEpisodes(animeId)` - Get anime episodes
+- `getEpisodeServers(episodeId)` - Get available servers for an episode
+- `getStreamingLinks(episodeId, server?)` - Get episode streaming links
 
 ## React Hooks
 
 ### Search Hooks
 ```typescript
-import { 
-  useAnimeSearch, 
-  useAdvancedSearch, 
-  useCrunchyrollSearch 
-} from '@/lib/consumet';
+import { useAnimeSearch } from '@/lib/consumet';
 
-// AniList search
+// Basic search
 const { data, loading, error } = useAnimeSearch('naruto');
-
-// Crunchyroll search
-const { data: crunchyrollData } = useCrunchyrollSearch('one piece');
-
-// Advanced search with filters
-const { data, loading, error } = useAdvancedSearch({
-  query: 'action',
-  genres: ['Action', 'Adventure'],
-  year: 2023,
-  status: 'RELEASING'
-});
 ```
 
 ### Information Hooks
 ```typescript
-import { 
-  useAnimeInfo, 
-  useAnimeEpisodes, 
-  useStreamingLinks,
-  useCrunchyrollAnimeInfo,
-  useCrunchyrollStreamingLinks 
-} from '@/lib/consumet';
+import { useAnimeInfo, useAnimeEpisodes, useEpisodeServers, useStreamingLinks } from '@/lib/consumet';
 
-// AniList anime details
-const { data: anime } = useAnimeInfo('21');
-const { data: episodes } = useAnimeEpisodes('21');
-const { data: links } = useStreamingLinks('episode-id');
+// Get anime details
+const { data: anime } = useAnimeInfo('naruto-dub');
 
-// Crunchyroll anime details
-const { data: crunchyrollAnime } = useCrunchyrollAnimeInfo('anime-id', 'series');
-const { data: crunchyrollLinks } = useCrunchyrollStreamingLinks('episode-id');
+// Get episodes
+const { data: episodes } = useAnimeEpisodes('naruto-dub');
+
+// Get episode servers
+const { data: servers } = useEpisodeServers('naruto-episode-1');
+
+// Get streaming links
+const { data: links } = useStreamingLinks('naruto-episode-1', 'vidstreaming');
 ```
 
 ### Discovery Hooks
 ```typescript
 import { 
-  useTrendingAnime, 
-  usePopularAnime, 
-  useRecentEpisodes,
-  useSeasonalAnime 
+  useTopAiringAnime, 
+  useRecentEpisodes
 } from '@/lib/consumet';
 
-// Trending anime
-const { data: trending } = useTrendingAnime();
-
-// Popular anime
-const { data: popular } = usePopularAnime();
+// Top airing anime
+const { data: topAiring } = useTopAiringAnime();
 
 // Recent episodes
 const { data: recent } = useRecentEpisodes();
-
-// Seasonal anime
-const { data: seasonal } = useSeasonalAnime(2024, 'WINTER');
 ```
 
 ## Utility Functions
@@ -248,64 +216,40 @@ import type {
 ```typescript
 interface AnimeInfo {
   id: string;
-  title: string | { romaji?: string; english?: string; native?: string };
-  image?: string;
-  description?: string;
-  status?: 'RELEASING' | 'FINISHED' | 'NOT_YET_RELEASED' | 'CANCELLED' | 'HIATUS';
-  totalEpisodes?: number;
-  rating?: number;
-  genres?: string[];
-  episodes?: Episode[];
-  characters?: Character[];
-  // ... more properties
+  title: string;
+  url: string;
+  genres: string[];
+  totalEpisodes: number;
+  image: string;
+  releaseDate: string;
+  description: string;
+  subOrDub: 'sub' | 'dub';
+  type: string;
+  status: string;
+  otherName: string;
+  episodes: Episode[];
 }
 ```
 
-#### SearchFilters
+#### SearchAnime
 ```typescript
-interface SearchFilters {
-  genres?: string[];
-  year?: number;
-  season?: 'WINTER' | 'SPRING' | 'SUMMER' | 'FALL';
-  format?: 'TV' | 'MOVIE' | 'OVA' | 'ONA' | 'SPECIAL' | 'MUSIC';
-  status?: 'RELEASING' | 'FINISHED' | 'NOT_YET_RELEASED' | 'CANCELLED' | 'HIATUS';
-  sort?: string[];
+interface SearchAnime {
+  id: string;
+  title: string;
+  url: string;
+  image: string;
+  releaseDate?: string;
+  subOrDub?: 'sub' | 'dub';
 }
 ```
 
 ## Examples
 
-### AniList Components
 Check the `examples/` directory for complete component examples:
 
 - `anime-search.tsx` - Search interface with filters
 - `trending-anime.tsx` - Trending anime grid
 - `anime-details.tsx` - Detailed anime information page
-
-### Crunchyroll Components
-New Crunchyroll-specific components:
-
-- `CrunchyrollSearch` - Search Crunchyroll anime catalog
-- `CrunchyrollAnimeInfo` - Display detailed Crunchyroll anime information
-- `AnimeWatchPage` - Updated to support both AniList and Crunchyroll providers
-
-```typescript
-// Using Crunchyroll components
-import { CrunchyrollSearch, CrunchyrollAnimeInfo } from '@/components/anime';
-
-// Search component
-<CrunchyrollSearch />
-
-// Anime info component
-<CrunchyrollAnimeInfo animeId="anime-id" type="series" />
-
-// Watch page with Crunchyroll provider
-<AnimeWatchPage 
-  animeId="anime-id" 
-  episodeId="episode-id" 
-  provider="crunchyroll" 
-/>
-```
 
 ## Error Handling
 
@@ -358,24 +302,14 @@ setInterval(() => {
 
 ## API Endpoints
 
-The library supports both AniList and Crunchyroll API endpoints:
+The library supports GogoAnime API endpoints:
 
-### AniList Endpoints
-- `/meta/anilist/{query}` - Search anime
-- `/meta/anilist/info/{id}` - Anime information
-- `/meta/anilist/watch/{episodeId}` - Streaming links
-- `/meta/anilist/trending` - Trending anime
-- `/meta/anilist/popular` - Popular anime
-- `/meta/anilist/recent-episodes` - Recent episodes
-- `/meta/anilist/random-anime` - Random anime
-- `/meta/anilist/genre` - Genre-based search
-- `/meta/anilist/advanced-search` - Advanced search
-- `/meta/anilist/airing-schedule` - Airing schedule
-
-### Crunchyroll Endpoints
-- `/anime/crunchyroll/{query}` - Search Crunchyroll anime
-- `/anime/crunchyroll/info/{id}?type={type}` - Crunchyroll anime information
-- `/anime/crunchyroll/watch/{episodeId}` - Crunchyroll streaming links
+- `/anime/gogoanime/{query}` - Search anime
+- `/anime/gogoanime/info/{id}` - Anime information
+- `/anime/gogoanime/servers/{episodeId}` - Episode servers
+- `/anime/gogoanime/watch/{episodeId}` - Streaming links
+- `/anime/gogoanime/top-airing` - Top airing anime
+- `/anime/gogoanime/recent-episodes` - Recent episodes
 
 ## Contributing
 

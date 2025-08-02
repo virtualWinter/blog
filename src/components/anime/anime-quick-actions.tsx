@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAnimeInfo, useCrunchyrollAnimeInfo } from '@/lib/consumet';
+import { useAnimeInfo } from '@/lib/consumet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -25,13 +25,10 @@ import { toast } from 'sonner';
 
 interface AnimeQuickActionsProps {
   animeId: string;
-  provider?: 'anilist' | 'crunchyroll';
 }
 
-export function AnimeQuickActions({ animeId, provider = 'anilist' }: AnimeQuickActionsProps) {
-  const { data: anime, loading } = provider === 'crunchyroll' 
-    ? useCrunchyrollAnimeInfo(animeId, 'series')
-    : useAnimeInfo(animeId);
+export function AnimeQuickActions({ animeId }: AnimeQuickActionsProps) {
+  const { data: anime, loading } = useAnimeInfo(animeId);
   const [watchProgress, setWatchProgress] = useState<any[]>([]);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
 

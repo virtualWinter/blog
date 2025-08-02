@@ -1,6 +1,6 @@
 'use client';
 
-import { useAnimeInfo, useCrunchyrollAnimeInfo } from '@/lib/consumet';
+import { useAnimeInfo } from '@/lib/consumet';
 import { 
   formatAnimeTitle, 
   getImageUrl, 
@@ -18,13 +18,10 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface AnimeDetailsProps {
   animeId: string;
-  provider?: 'anilist' | 'crunchyroll';
 }
 
-export function AnimeDetails({ animeId, provider = 'anilist' }: AnimeDetailsProps) {
-  const { data: anime, loading, error } = provider === 'crunchyroll' 
-    ? useCrunchyrollAnimeInfo(animeId, 'series')
-    : useAnimeInfo(animeId);
+export function AnimeDetails({ animeId }: AnimeDetailsProps) {
+  const { data: anime, loading, error } = useAnimeInfo(animeId);
 
   if (loading) {
     return <AnimeDetailsSkeleton />;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getContinueWatching, formatWatchTime, getProgressPercentage } from '@/lib/anime/watch-progress';
-import { useCrunchyrollAnimeInfo } from '@/lib/consumet';
+import { useAnimeInfo } from '@/lib/consumet';
 import { formatAnimeTitle, getImageUrl } from '@/lib/consumet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -47,7 +47,7 @@ export function ContinueWatchingSection() {
 }
 
 function ContinueWatchingCard({ progress }: { progress: WatchProgress }) {
-  const { data: anime, loading } = useCrunchyrollAnimeInfo(progress.animeId, 'series');
+  const { data: anime, loading } = useAnimeInfo(progress.animeId);
   const progressPercentage = getProgressPercentage(progress.currentTime, progress.duration);
 
   if (loading) {
@@ -66,7 +66,7 @@ function ContinueWatchingCard({ progress }: { progress: WatchProgress }) {
 
   return (
     <Link
-      href={`/anime/crunchyroll/watch/${progress.animeId}/${progress.episodeId}?episode=${progress.episodeNumber}`}
+      href={`/anime/watch/${progress.animeId}/${progress.episodeId}?episode=${progress.episodeNumber}`}
     >
       <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
         <div className="relative">

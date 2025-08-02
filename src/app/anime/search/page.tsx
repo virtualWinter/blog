@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AnimeSearchForm } from '@/components/anime/anime-search-form';
 import { AnimeGrid } from '@/components/anime/anime-grid';
-import { useCrunchyrollSearch } from '@/lib/consumet';
+import { useAnimeSearch } from '@/lib/consumet';
 import { SearchFilters } from '@/lib/consumet/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,7 +16,7 @@ function AnimeSearchContent() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<SearchFilters>({});
 
-  const { data, loading, error } = useCrunchyrollSearch(query, page);
+  const { data, loading, error } = useAnimeSearch(query, page, 20, filters);
 
   useEffect(() => {
     const q = searchParams.get('q');
@@ -28,8 +28,7 @@ function AnimeSearchContent() {
 
   const handleSearch = (newQuery: string, newFilters: SearchFilters) => {
     setQuery(newQuery);
-    // Note: Crunchyroll search doesn't support advanced filters like AniList
-    setFilters({}); // Reset filters as they're not supported
+    setFilters(newFilters);
     setPage(1);
   };
 
@@ -93,7 +92,7 @@ function AnimeSearchContent() {
               </div>
             </div>
 
-            <AnimeGrid anime={data.results} provider="crunchyroll" />
+            <AnimeGrid anime={data.results} />
 
             {/* Pagination */}
             {(data.hasNextPage || page > 1) && (

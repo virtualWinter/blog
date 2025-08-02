@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AnimePlayer } from './anime-player';
-import { useAnimeInfo, useStreamingLinks, useCrunchyrollAnimeInfo, useCrunchyrollStreamingLinks } from '@/lib/consumet';
+import { useAnimeInfo, useStreamingLinks } from '@/lib/consumet';
 import { formatAnimeTitle, getImageUrl } from '@/lib/consumet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,52 +16,36 @@ interface AnimeWatchPageProps {
   animeId: string;
   episodeId: string;
   episodeNumber?: number;
-  provider?: 'anilist' | 'crunchyroll';
 }
 
-export function AnimeWatchPage({ animeId, episodeId, episodeNumber, provider = 'anilist' }: AnimeWatchPageProps) {
+export function AnimeWatchPage({ animeId, episodeId, episodeNumber }: AnimeWatchPageProps) {
   const router = useRouter();
   const [watchTime, setWatchTime] = useState(0);
   
-  // Use appropriate hooks based on provider
-  const { data: anime, loading: animeLoading } = provider === 'crunchyroll' 
-    ? useCrunchyrollAnimeInfo(animeId, 'series')
-    : useAnimeInfo(animeId);
-  
-  const { data: streamingData, loading: streamingLoading, error: streamingError } = provider === 'crunchyroll'
-    ? useCrunchyrollStreamingLinks(episodeId)
-    : useStreamingLinks(episodeId);
+  const { data: anime, loading: animeLoading } = useAnimeInfo(animeId);
+  const { data: streamingData, loading: streamingLoading, error: streamingError } = useStreamingLinks(episodeId, 'vidstreaming');
 
   // Find current episode
   const currentEpisode = anime?.episodes?.find(ep => ep.id === episodeId);
   const currentEpisodeIndex = anime?.episodes?.findIndex(ep => ep.id === episodeId) ?? -1;
   
   // Navigation functions
-  const getWatchUrl = (episodeId: string, episodeNumber: number) => {
-    const basePath = provider === 'crunchyroll' ? '/anime/crunchyroll/watch' : '/anime/watch';
-    return `${basePath}/${animeId}/${episodeId}?episode=${episodeNumber}`;
-  };
-
-  const getAnimeUrl = () => {
-    return provider === 'crunchyroll' ? `/anime/crunchyroll/${animeId}` : `/anime/${animeId}`;
-  };
-
   const handlePreviousEpisode = () => {
     if (currentEpisodeIndex > 0 && anime?.episodes) {
       const prevEpisode = anime.episodes[currentEpisodeIndex - 1];
-      router.push(getWatchUrl(prevEpisode.id, prevEpisode.number));
+      router.push(`/anime/watch/${animeId}/${prevEpisode.id}?episode=${prevEpisode.number}`);
     }
   };
 
   const handleNextEpisode = () => {
     if (currentEpisodeIndex < (anime?.episodes?.length ?? 0) - 1 && anime?.episodes) {
       const nextEpisode = anime.episodes[currentEpisodeIndex + 1];
-      router.push(getWatchUrl(nextEpisode.id, nextEpisode.number));
+      router.push(`/anime/watch/${animeId}/${nextEpisode.id}?episode=${nextEpisode.number}`);
     }
   };
 
   const handleEpisodeSelect = (episode: any) => {
-    router.push(getWatchUrl(episode.id, episode.number));
+    router.push(`/anime/watch/${animeId}/${episode.id}?episode=${episode.number}`);
   };
 
   const handleShare = async () => {
@@ -114,7 +98,7 @@ export function AnimeWatchPage({ animeId, episodeId, episodeNumber, provider = '
             {streamingError || 'No streaming sources available'}
           </div>
           <Button asChild variant="outline">
-            <Link href={getAnimeUrl()}>
+            <Link href={`/anime/${animeId}`}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Anime
             </Link>
@@ -129,7 +113,6 @@ export function AnimeWatchPage({ animeId, episodeId, episodeNumber, provider = '
       {/* Video Player */}
       <AnimePlayer
         sources={streamingData.sources}
-        subtitles={streamingData.subtitles}
         title={formatAnimeTitle(anime?.title)}
         episodeNumber={currentEpisode?.number || episodeNumber}
         animeId={animeId}
@@ -167,19 +150,19 @@ export function AnimeWatchPage({ animeId, episodeId, episodeNumber, provider = '
                     <Share2 className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={getAnimeUrl()}>
+                    <Link href={`/anime/${animeId}`}>
                       <ExternalLink className="h-4 w-4" />
                     </Link>
                   </Button>
                 </div>
               </div>
 
-              {/* Episode Description */}
-              {currentEpisode?.description && (
+              {/* Anime Description */}
+              {anime?.description && (
                 <div className="bg-gray-900 rounded-lg p-4">
-                  <h3 className="font-semibold mb-2">Episode Description</h3>
+                  <h3 className="font-semibold mb-2">Description</h3>
                   <p className="text-gray-300 leading-relaxed">
-                    {currentEpisode.description}
+                    {anime.description}
                   </p>
                 </div>
               )}
@@ -201,10 +184,18 @@ export function AnimeWatchPage({ animeId, episodeId, episodeNumber, provider = '
                       <span className="text-gray-400">Type:</span>
                       <span className="ml-2">{anime.type}</span>
                     </div>
-                    {anime.rating && (
-                      <div>
-                        <span className="text-gray-400">Rating:</span>
-                        <span className="ml-2">{anime.rating}%</span>
+                    <div>
+                      <span className="text-gray-400">Sub/Dub:</span>
+                      <span className="ml-2">{anime.subOrDub?.toUpperCase()}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Released:</span>
+                      <span className="ml-2">{anime.releaseDate}</span>
+                    </div>
+                    {anime.otherName && (
+                      <div className="col-span-2">
+                        <span className="text-gray-400">Other Name:</span>
+                        <span className="ml-2">{anime.otherName}</span>
                       </div>
                     )}
                   </div>
@@ -252,7 +243,7 @@ export function AnimeWatchPage({ animeId, episodeId, episodeNumber, provider = '
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">Episodes</h3>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href={getAnimeUrl()} className="text-xs">
+                  <Link href={`/anime/${animeId}`} className="text-xs">
                     View All
                   </Link>
                 </Button>
@@ -276,32 +267,16 @@ export function AnimeWatchPage({ animeId, episodeId, episodeNumber, provider = '
                         }`}
                       >
                         <div className="flex items-start gap-3">
-                          {episode.image && (
-                            <div className="relative">
-                              <img
-                                src={episode.image}
-                                alt={`Episode ${episode.number}`}
-                                className="w-12 h-8 object-cover rounded flex-shrink-0"
-                              />
-                              {isWatched && (
-                                <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-0.5">
-                                  <CheckCircle className="h-3 w-3 text-white" />
-                                </div>
-                              )}
-                            </div>
-                          )}
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-sm flex items-center gap-2">
                               Episode {episode.number}
                               {isCurrentlyWatching && (
                                 <Play className="h-3 w-3" />
                               )}
+                              {isWatched && (
+                                <CheckCircle className="h-3 w-3 text-green-500" />
+                              )}
                             </div>
-                            {episode.title && (
-                              <div className="text-xs text-gray-400 line-clamp-2 mt-1">
-                                {episode.title}
-                              </div>
-                            )}
                           </div>
                         </div>
                       </button>
@@ -323,7 +298,7 @@ export function AnimeWatchPage({ animeId, episodeId, episodeNumber, provider = '
                   {formatAnimeTitle(anime.title)}
                 </h4>
                 <Button asChild variant="outline" size="sm" className="w-full">
-                  <Link href={getAnimeUrl()}>
+                  <Link href={`/anime/${animeId}`}>
                     View Details
                   </Link>
                 </Button>

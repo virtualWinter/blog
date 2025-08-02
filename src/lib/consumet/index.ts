@@ -20,4 +20,6 @@ export {
   filterByGenre,
   filterByStatus,
   filterByYear,
+  getAnimeYear,
+  formatEpisodeCount,
 } from './utils';

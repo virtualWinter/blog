@@ -203,13 +203,7 @@ export function Header() {
                       href="/anime"
                       className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                     >
-                      Anime (AniList)
-                    </Link>
-                    <Link
-                      href="/anime/crunchyroll"
-                      className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                    >
-                      Anime (Crunchyroll)
+                      Anime
                     </Link>
                     <Link
                       href="mailto:hello@example.com"

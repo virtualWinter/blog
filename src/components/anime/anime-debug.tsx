@@ -1,19 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAnimeInfo, useCrunchyrollAnimeInfo } from '@/lib/consumet';
+import { useAnimeInfo } from '@/lib/consumet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 interface AnimeDebugProps {
   animeId: string;
-  provider?: 'anilist' | 'crunchyroll';
 }
 
-export function AnimeDebug({ animeId, provider = 'anilist' }: AnimeDebugProps) {
-  const { data: anime, loading, error } = provider === 'crunchyroll' 
-    ? useCrunchyrollAnimeInfo(animeId, 'series')
-    : useAnimeInfo(animeId);
+export function AnimeDebug({ animeId }: AnimeDebugProps) {
+  const { data: anime, loading, error } = useAnimeInfo(animeId);
   const [rawResponse, setRawResponse] = useState<any>(null);
   const [apiError, setApiError] = useState<string | null>(null);
 

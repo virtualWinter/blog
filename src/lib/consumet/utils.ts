@@ -1,14 +1,10 @@
-import { AnimeInfo } from './types';
+import { AnimeInfo, SearchAnime } from './types';
 
-// Utility functions for working with Consumet API data
+// Utility functions for working with GogoAnime API data
 
-// Format anime title
-export function formatAnimeTitle(title: string | { romaji?: string; english?: string; native?: string }): string {
-  if (typeof title === 'string') {
-    return title;
-  }
-  
-  return title.english || title.romaji || title.native || 'Unknown Title';
+// Format anime title (now always a string in GogoAnime)
+export function formatAnimeTitle(title: string): string {
+  return title || 'Unknown Title';
 }
 
 // Get anime status color
@@ -73,14 +69,12 @@ export function formatSeason(season?: string): string {
   return season.charAt(0).toUpperCase() + season.slice(1).toLowerCase();
 }
 
-// Get anime year from release date or start date
-export function getAnimeYear(anime: AnimeInfo): number | null {
+// Get anime year from release date
+export function getAnimeYear(anime: AnimeInfo | SearchAnime): number | null {
   if (anime.releaseDate) {
-    return anime.releaseDate;
-  }
-  
-  if (anime.startDate?.year) {
-    return anime.startDate.year;
+    // Try to extract year from release date string
+    const yearMatch = anime.releaseDate.match(/\d{4}/);
+    return yearMatch ? parseInt(yearMatch[0]) : null;
   }
   
   return null;
@@ -101,38 +95,19 @@ export function formatDuration(duration?: number): string {
 }
 
 // Format episode count
-export function formatEpisodeCount(totalEpisodes?: number, currentEpisode?: number): string {
-  if (!totalEpisodes && !currentEpisode) return 'Unknown';
-  
-  if (totalEpisodes && currentEpisode) {
-    return `${currentEpisode}/${totalEpisodes}`;
-  }
-  
-  if (totalEpisodes) {
-    return `${totalEpisodes} episodes`;
-  }
-  
-  if (currentEpisode) {
-    return `${currentEpisode} episodes`;
-  }
-  
-  return 'Unknown';
+export function formatEpisodeCount(totalEpisodes?: number): string {
+  if (!totalEpisodes) return 'Unknown';
+  return `${totalEpisodes} episodes`;
 }
 
-// Get rating color based on score
+// Get rating color based on score (GogoAnime doesn't provide ratings)
 export function getRatingColor(rating?: number): string {
-  if (!rating) return 'text-gray-500';
-  
-  if (rating >= 80) return 'text-green-500';
-  if (rating >= 70) return 'text-yellow-500';
-  if (rating >= 60) return 'text-orange-500';
-  return 'text-red-500';
+  return 'text-gray-500'; // Default since GogoAnime doesn't provide ratings
 }
 
-// Format rating
+// Format rating (GogoAnime doesn't provide ratings)
 export function formatRating(rating?: number): string {
-  if (!rating) return 'N/A';
-  return `${rating}%`;
+  return 'N/A'; // GogoAnime doesn't provide ratings
 }
 
 // Truncate description
@@ -154,37 +129,21 @@ export function getImageUrl(imageUrl?: string, fallback?: string): string {
   return imageUrl || fallback || '/placeholder-anime.jpg';
 }
 
-// Check if anime is currently airing
+// Check if anime is currently airing (based on status string)
 export function isCurrentlyAiring(anime: AnimeInfo): boolean {
-  return anime.status === 'RELEASING';
-}
-
-// Get next airing episode info
-export function getNextAiringInfo(anime: AnimeInfo): string | null {
-  if (!isCurrentlyAiring(anime)) return null;
-  
-  const currentEp = anime.currentEpisode || 0;
-  const totalEp = anime.totalEpisodes;
-  
-  if (totalEp && currentEp >= totalEp) return null;
-  
-  return `Episode ${currentEp + 1}`;
+  return anime.status?.toLowerCase().includes('ongoing') || 
+         anime.status?.toLowerCase().includes('airing') ||
+         anime.status?.toLowerCase().includes('releasing');
 }
 
 // Sort anime by different criteria
-export function sortAnime(anime: AnimeInfo[], sortBy: 'title' | 'rating' | 'popularity' | 'releaseDate'): AnimeInfo[] {
+export function sortAnime(anime: (AnimeInfo | SearchAnime)[], sortBy: 'title' | 'releaseDate'): (AnimeInfo | SearchAnime)[] {
   return [...anime].sort((a, b) => {
     switch (sortBy) {
       case 'title':
         const titleA = formatAnimeTitle(a.title);
         const titleB = formatAnimeTitle(b.title);
         return titleA.localeCompare(titleB);
-      
-      case 'rating':
-        return (b.rating || 0) - (a.rating || 0);
-      
-      case 'popularity':
-        return (b.popularity || 0) - (a.popularity || 0);
       
       case 'releaseDate':
         const yearA = getAnimeYear(a) || 0;
@@ -206,11 +165,13 @@ export function filterByGenre(anime: AnimeInfo[], genre: string): AnimeInfo[] {
 
 // Filter anime by status
 export function filterByStatus(anime: AnimeInfo[], status: string): AnimeInfo[] {
-  return anime.filter(item => item.status === status);
+  return anime.filter(item => 
+    item.status?.toLowerCase().includes(status.toLowerCase())
+  );
 }
 
 // Filter anime by year
-export function filterByYear(anime: AnimeInfo[], year: number): AnimeInfo[] {
+export function filterByYear(anime: (AnimeInfo | SearchAnime)[], year: number): (AnimeInfo | SearchAnime)[] {
   return anime.filter(item => getAnimeYear(item) === year);
 }
 
@@ -226,7 +187,7 @@ export function getUniqueGenres(anime: AnimeInfo[]): string[] {
 }
 
 // Get unique years from anime list
-export function getUniqueYears(anime: AnimeInfo[]): number[] {
+export function getUniqueYears(anime: (AnimeInfo | SearchAnime)[]): number[] {
   const years = new Set<number>();
   
   anime.forEach(item => {
@@ -237,21 +198,12 @@ export function getUniqueYears(anime: AnimeInfo[]): number[] {
   return Array.from(years).sort((a, b) => b - a);
 }
 
-// Create search query string
-export function createSearchQuery(filters: {
-  query?: string;
-  genres?: string[];
-  year?: number;
-  status?: string;
-  type?: string;
-}): string {
+// Create search query string (simplified for GogoAnime)
+export function createSearchQuery(query: string, page?: number): string {
   const params = new URLSearchParams();
   
-  if (filters.query) params.append('q', filters.query);
-  if (filters.genres?.length) params.append('genres', filters.genres.join(','));
-  if (filters.year) params.append('year', filters.year.toString());
-  if (filters.status) params.append('status', filters.status);
-  if (filters.type) params.append('type', filters.type);
+  if (query) params.append('q', query);
+  if (page) params.append('page', page.toString());
   
   return params.toString();
 }

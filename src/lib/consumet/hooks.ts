@@ -4,11 +4,9 @@ import {
   AnimeInfo,
   SearchResult,
   StreamingLinks,
-  TrendingResult,
-  PopularResult,
   RecentEpisodesResult,
-  SearchFilters,
   Episode,
+  ServerList,
 } from './types';
 
 // Generic hook for API calls with loading and error states
@@ -41,174 +39,60 @@ function useApiCall<T>(
 }
 
 // Hook for searching anime
-export function useAnimeSearch(
-  query: string,
-  page: number = 1,
-  perPage: number = 20,
-  filters?: SearchFilters
-) {
+export function useAnimeSearch(query: string, page: number = 1) {
   return useApiCall<SearchResult>(
-    () => consumetApi.search(query, page, perPage, filters),
-    [query, page, perPage, JSON.stringify(filters)]
-  );
-}
-
-// Hook for getting anime info
-export function useAnimeInfo(id: string, provider: string = 'gogoanime') {
-  return useApiCall<AnimeInfo>(
-    () => consumetApi.getAnimeInfo(id, provider),
-    [id, provider]
-  );
-}
-
-// Hook for getting streaming links
-export function useStreamingLinks(episodeId: string, provider: string = 'gogoanime') {
-  return useApiCall<StreamingLinks>(
-    () => consumetApi.getStreamingLinks(episodeId, provider),
-    [episodeId, provider]
-  );
-}
-
-// Hook for trending anime
-export function useTrendingAnime(page: number = 1, perPage: number = 20) {
-  return useApiCall<TrendingResult>(
-    () => consumetApi.getTrending(page, perPage),
-    [page, perPage]
-  );
-}
-
-// Hook for popular anime
-export function usePopularAnime(page: number = 1, perPage: number = 20) {
-  return useApiCall<PopularResult>(
-    () => consumetApi.getPopular(page, perPage),
-    [page, perPage]
-  );
-}
-
-// Hook for recent episodes
-export function useRecentEpisodes(
-  page: number = 1,
-  perPage: number = 20,
-  provider: string = 'gogoanime'
-) {
-  return useApiCall<RecentEpisodesResult>(
-    () => consumetApi.getRecentEpisodes(page, perPage, provider),
-    [page, perPage, provider]
-  );
-}
-
-// Hook for anime episodes
-export function useAnimeEpisodes(animeId: string, provider: string = 'gogoanime') {
-  return useApiCall<Episode[]>(
-    () => consumetApi.getEpisodes(animeId, provider),
-    [animeId, provider]
-  );
-}
-
-// Hook for seasonal anime
-export function useSeasonalAnime(
-  year: number,
-  season: 'WINTER' | 'SPRING' | 'SUMMER' | 'FALL',
-  page: number = 1,
-  perPage: number = 20
-) {
-  return useApiCall<SearchResult>(
-    () => consumetApi.getSeasonalAnime(year, season, page, perPage),
-    [year, season, page, perPage]
-  );
-}
-
-// Hook for random anime
-export function useRandomAnime() {
-  const [data, setData] = useState<AnimeInfo | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchRandomAnime = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await consumetApi.getRandomAnime();
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { data, loading, error, fetchRandomAnime };
-}
-
-// Hook for advanced search with debouncing
-export function useAdvancedSearch(
-  filters: {
-    query?: string;
-    type?: string;
-    page?: number;
-    perPage?: number;
-    season?: string;
-    format?: string;
-    sort?: string[];
-    genres?: string[];
-    id?: string;
-    year?: number;
-    status?: string;
-  },
-  debounceMs: number = 500
-) {
-  const [debouncedFilters, setDebouncedFilters] = useState(filters);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedFilters(filters);
-    }, debounceMs);
-
-    return () => clearTimeout(timer);
-  }, [filters, debounceMs]);
-
-  return useApiCall<SearchResult>(
-    () => consumetApi.advancedSearch(debouncedFilters),
-    [JSON.stringify(debouncedFilters)]
-  );
-}
-
-// Hook for airing schedule
-export function useAiringSchedule(
-  page: number = 1,
-  perPage: number = 20,
-  weekStart?: number,
-  weekEnd?: number,
-  notYetAired?: boolean
-) {
-  return useApiCall<SearchResult>(
-    () => consumetApi.getAiringSchedule(page, perPage, weekStart, weekEnd, notYetAired),
-    [page, perPage, weekStart, weekEnd, notYetAired]
-  );
-}
-
-// Crunchyroll-specific hooks
-
-// Hook for Crunchyroll anime search
-export function useCrunchyrollSearch(query: string, page: number = 1) {
-  return useApiCall<SearchResult>(
-    () => consumetApi.searchCrunchyroll(query, page),
+    () => consumetApi.search(query, page),
     [query, page]
   );
 }
 
-// Hook for Crunchyroll anime info
-export function useCrunchyrollAnimeInfo(id: string, type: 'series' | 'movie' = 'series') {
+// Hook for getting anime info
+export function useAnimeInfo(id: string) {
   return useApiCall<AnimeInfo>(
-    () => consumetApi.getCrunchyrollAnimeInfo(id, type),
-    [id, type]
+    () => consumetApi.getAnimeInfo(id),
+    [id]
   );
 }
 
-// Hook for Crunchyroll streaming links
-export function useCrunchyrollStreamingLinks(episodeId: string) {
-  return useApiCall<StreamingLinks>(
-    () => consumetApi.getCrunchyrollStreamingLinks(episodeId),
+// Hook for getting episode servers
+export function useEpisodeServers(episodeId: string) {
+  return useApiCall<ServerList>(
+    () => consumetApi.getEpisodeServers(episodeId),
     [episodeId]
   );
 }
+
+// Hook for getting streaming links
+export function useStreamingLinks(episodeId: string, server: string = 'vidstreaming') {
+  return useApiCall<StreamingLinks>(
+    () => consumetApi.getStreamingLinks(episodeId, server),
+    [episodeId, server]
+  );
+}
+
+// Hook for top airing anime
+export function useTopAiringAnime(page: number = 1) {
+  return useApiCall<SearchResult>(
+    () => consumetApi.getTopAiring(page),
+    [page]
+  );
+}
+
+// Hook for recent episodes
+export function useRecentEpisodes(page: number = 1, type: number = 1) {
+  return useApiCall<RecentEpisodesResult>(
+    () => consumetApi.getRecentEpisodes(page, type),
+    [page, type]
+  );
+}
+
+// Hook for anime episodes
+export function useAnimeEpisodes(animeId: string) {
+  return useApiCall<Episode[]>(
+    () => consumetApi.getEpisodes(animeId),
+    [animeId]
+  );
+}
+
+
+
