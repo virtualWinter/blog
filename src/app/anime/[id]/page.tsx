@@ -43,7 +43,7 @@ export default function AnimePage({ params }: AnimePageProps) {
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/anime">Anime</Link>
+                  <Link href="/anime">Anime (Crunchyroll)</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -56,30 +56,30 @@ export default function AnimePage({ params }: AnimePageProps) {
       </div>
 
       <Suspense fallback={<AnimeDetailsSkeleton />}>
-        <AnimeDetails animeId={params.id} />
+        <AnimeDetails animeId={params.id} provider="crunchyroll" />
       </Suspense>
       
       {/* Quick Actions Bar */}
       <Suspense fallback={<Skeleton className="h-16 w-full" />}>
-        <AnimeQuickActions animeId={params.id} />
+        <AnimeQuickActions animeId={params.id} provider="crunchyroll" />
       </Suspense>
       
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
         {/* Debug component - remove this after testing */}
         <Suspense fallback={<div>Loading debug...</div>}>
-          <AnimeDebug animeId={params.id} />
+          <AnimeDebug animeId={params.id} provider="crunchyroll" />
         </Suspense>
         
         <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
-          <AnimeEpisodes animeId={params.id} />
+          <AnimeEpisodes animeId={params.id} provider="crunchyroll" />
         </Suspense>
         
         <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
-          <AnimeCharacters animeId={params.id} />
+          <AnimeCharacters animeId={params.id} provider="crunchyroll" />
         </Suspense>
         
         <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
-          <AnimeRecommendations animeId={params.id} />
+          <AnimeRecommendations animeId={params.id} provider="crunchyroll" />
         </Suspense>
       </div>
     </div>

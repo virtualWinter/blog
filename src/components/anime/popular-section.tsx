@@ -1,14 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { usePopularAnime } from '@/lib/consumet';
+import { useCrunchyrollSearch } from '@/lib/consumet';
 import { AnimeGrid } from './anime-grid';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronRight } from 'lucide-react';
 
 export function PopularSection() {
-  const { data, loading, error } = usePopularAnime(1, 8);
+  const { data, loading, error } = useCrunchyrollSearch('anime', 1);
 
   if (loading) {
     return (
@@ -49,7 +49,7 @@ export function PopularSection() {
         </Button>
       </div>
       
-      <AnimeGrid anime={data.results} />
+      <AnimeGrid anime={data.results.slice(0, 8)} provider="crunchyroll" />
     </section>
   );
 }

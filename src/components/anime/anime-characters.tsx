@@ -1,6 +1,6 @@
 'use client';
 
-import { useAnimeInfo } from '@/lib/consumet';
+import { useAnimeInfo, useCrunchyrollAnimeInfo } from '@/lib/consumet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,10 +8,13 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface AnimeCharactersProps {
   animeId: string;
+  provider?: 'anilist' | 'crunchyroll';
 }
 
-export function AnimeCharacters({ animeId }: AnimeCharactersProps) {
-  const { data: anime, loading, error } = useAnimeInfo(animeId);
+export function AnimeCharacters({ animeId, provider = 'anilist' }: AnimeCharactersProps) {
+  const { data: anime, loading, error } = provider === 'crunchyroll' 
+    ? useCrunchyrollAnimeInfo(animeId, 'series')
+    : useAnimeInfo(animeId);
 
   if (loading) {
     return (

@@ -1,15 +1,18 @@
 'use client';
 
-import { useAnimeInfo } from '@/lib/consumet';
+import { useAnimeInfo, useCrunchyrollAnimeInfo } from '@/lib/consumet';
 import { AnimeGrid } from './anime-grid';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface AnimeRecommendationsProps {
   animeId: string;
+  provider?: 'anilist' | 'crunchyroll';
 }
 
-export function AnimeRecommendations({ animeId }: AnimeRecommendationsProps) {
-  const { data: anime, loading, error } = useAnimeInfo(animeId);
+export function AnimeRecommendations({ animeId, provider = 'anilist' }: AnimeRecommendationsProps) {
+  const { data: anime, loading, error } = provider === 'crunchyroll' 
+    ? useCrunchyrollAnimeInfo(animeId, 'series')
+    : useAnimeInfo(animeId);
 
   if (loading) {
     return (
@@ -41,7 +44,7 @@ export function AnimeRecommendations({ animeId }: AnimeRecommendationsProps) {
         Recommendations ({anime.recommendations.length})
       </h2>
       
-      <AnimeGrid anime={anime.recommendations.slice(0, 8)} />
+      <AnimeGrid anime={anime.recommendations.slice(0, 8)} provider={provider} />
       
       {anime.recommendations.length > 8 && (
         <div className="text-center">

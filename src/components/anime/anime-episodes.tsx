@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAnimeInfo } from '@/lib/consumet';
+import { useAnimeInfo, useCrunchyrollAnimeInfo } from '@/lib/consumet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,14 +20,22 @@ import {
 
 interface AnimeEpisodesProps {
   animeId: string;
+  provider?: 'anilist' | 'crunchyroll';
 }
 
-export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
-  const { data: anime, loading, error } = useAnimeInfo(animeId);
+export function AnimeEpisodes({ animeId, provider = 'anilist' }: AnimeEpisodesProps) {
+  const { data: anime, loading, error } = provider === 'crunchyroll' 
+    ? useCrunchyrollAnimeInfo(animeId, 'series')
+    : useAnimeInfo(animeId);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [watchProgress, setWatchProgress] = useState<Record<string, WatchProgress>>({});
   const episodesPerPage = viewMode === 'grid' ? 24 : 50;
+
+  const getWatchUrl = (episode: any) => {
+    const basePath = provider === 'crunchyroll' ? '/anime/crunchyroll/watch' : '/anime/watch';
+    return `${basePath}/${animeId}/${episode.id}?episode=${episode.number}`;
+  };
 
   // Extract episodes from anime info
   const episodes = anime?.episodes || [];
@@ -350,7 +358,7 @@ function EpisodeCard({ episode, animeId, progress, isPlaceholder = false }: Epis
 
   return (
     <Link 
-      href={isPlaceholder ? '#' : `/anime/watch/${animeId}/${episode.id}?episode=${episode.number}`}
+      href={isPlaceholder ? '#' : getWatchUrl(episode)}
       onClick={handleClick}
     >
       <Card className={`hover:shadow-md transition-shadow cursor-pointer group ${isPlaceholder ? 'opacity-60' : ''}`}>
@@ -436,7 +444,7 @@ function EpisodeListItem({ episode, animeId, progress, isPlaceholder = false }: 
 
   return (
     <Link 
-      href={isPlaceholder ? '#' : `/anime/watch/${animeId}/${episode.id}?episode=${episode.number}`}
+      href={isPlaceholder ? '#' : getWatchUrl(episode)}
       onClick={handleClick}
     >
       <Card className={`hover:shadow-md transition-shadow cursor-pointer group ${isPlaceholder ? 'opacity-60' : ''}`}>

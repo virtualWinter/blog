@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { usePopularAnime } from '@/lib/consumet';
+import { useCrunchyrollSearch } from '@/lib/consumet';
 import { AnimeGrid } from '@/components/anime/anime-grid';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,7 +9,8 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function PopularAnimePage() {
   const [page, setPage] = useState(1);
-  const { data, loading, error } = usePopularAnime(page, 24);
+  // Using search with anime term as Crunchyroll doesn't have a dedicated popular endpoint
+  const { data, loading, error } = useCrunchyrollSearch('anime', page);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -62,7 +63,7 @@ export default function PopularAnimePage() {
               </div>
             </div>
 
-            <AnimeGrid anime={data.results} showRanking />
+            <AnimeGrid anime={data.results} showRanking provider="crunchyroll" />
 
             {/* Pagination */}
             {(data.hasNextPage || page > 1) && (
