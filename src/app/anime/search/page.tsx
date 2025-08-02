@@ -6,6 +6,9 @@ import { AnimeSearchForm } from '@/components/anime/anime-search-form';
 import { AnimeGrid } from '@/components/anime/anime-grid';
 import { useAnimeSearch } from '@/lib/consumet';
 import { SearchFilters } from '@/lib/consumet/types';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 function AnimeSearchContent() {
   const searchParams = useSearchParams();
@@ -35,10 +38,10 @@ function AnimeSearchContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
+    <div className="min-h-screen">
+      <div className="border-b">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Search Anime</h1>
+          <h1 className="text-3xl font-bold mb-6">Search Anime</h1>
           <AnimeSearchForm
             initialQuery={query}
             initialFilters={filters}
@@ -51,12 +54,12 @@ function AnimeSearchContent() {
         {loading && page === 1 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="w-full h-64 bg-gray-200 animate-pulse" />
-                <div className="p-4 space-y-2">
-                  <div className="h-4 bg-gray-200 animate-pulse rounded" />
-                  <div className="h-3 bg-gray-200 animate-pulse rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 animate-pulse rounded w-1/2" />
+              <div key={i} className="space-y-3">
+                <Skeleton className="aspect-[3/4] w-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
                 </div>
               </div>
             ))}
@@ -65,20 +68,20 @@ function AnimeSearchContent() {
 
         {error && (
           <div className="text-center py-12">
-            <div className="text-red-500 text-lg mb-2">Error loading results</div>
-            <div className="text-gray-600">{error}</div>
+            <div className="text-destructive text-lg mb-2">Error loading results</div>
+            <div className="text-muted-foreground">{error}</div>
           </div>
         )}
 
         {data && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <div className="text-lg text-gray-700">
+              <div className="text-lg">
                 {query ? (
                   <>
                     Search results for "<span className="font-semibold">{query}</span>"
                     {data.totalResults && (
-                      <span className="text-gray-500 ml-2">
+                      <span className="text-muted-foreground ml-2">
                         ({data.totalResults.toLocaleString()} results)
                       </span>
                     )}
@@ -94,31 +97,31 @@ function AnimeSearchContent() {
             {/* Pagination */}
             {(data.hasNextPage || page > 1) && (
               <div className="flex justify-center items-center gap-4 mt-8">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => handlePageChange(page - 1)}
                   disabled={page === 1}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
-                </button>
+                </Button>
                 
-                <span className="px-4 py-2 text-gray-700">
+                <span className="px-4 py-2">
                   Page {page}
                 </span>
                 
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => handlePageChange(page + 1)}
                   disabled={!data.hasNextPage}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             )}
 
             {loading && page > 1 && (
               <div className="text-center py-4">
-                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                <LoadingSpinner />
               </div>
             )}
           </div>
@@ -126,8 +129,8 @@ function AnimeSearchContent() {
 
         {data && data.results.length === 0 && !loading && (
           <div className="text-center py-12">
-            <div className="text-gray-500 text-lg mb-2">No results found</div>
-            <div className="text-gray-400">
+            <div className="text-muted-foreground text-lg mb-2">No results found</div>
+            <div className="text-muted-foreground">
               Try adjusting your search terms or filters
             </div>
           </div>
@@ -140,22 +143,22 @@ function AnimeSearchContent() {
 export default function AnimeSearchPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow-sm border-b">
+      <div className="min-h-screen">
+        <div className="border-b">
           <div className="max-w-7xl mx-auto px-4 py-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">Search Anime</h1>
-            <div className="h-12 bg-gray-200 animate-pulse rounded-lg" />
+            <h1 className="text-3xl font-bold mb-6">Search Anime</h1>
+            <Skeleton className="h-12 w-full" />
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="w-full h-64 bg-gray-200 animate-pulse" />
-                <div className="p-4 space-y-2">
-                  <div className="h-4 bg-gray-200 animate-pulse rounded" />
-                  <div className="h-3 bg-gray-200 animate-pulse rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 animate-pulse rounded w-1/2" />
+              <div key={i} className="space-y-3">
+                <Skeleton className="aspect-[3/4] w-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
                 </div>
               </div>
             ))}

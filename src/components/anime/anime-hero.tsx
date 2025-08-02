@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTrendingAnime } from '@/lib/consumet';
 import { formatAnimeTitle, getImageUrl, truncateDescription } from '@/lib/consumet';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export function AnimeHero() {
   const { data } = useTrendingAnime(1, 5);
@@ -58,30 +60,25 @@ export function AnimeHero() {
               </p>
             )}
 
-            <div className="flex flex-wrap gap-4 mb-6">
+            <div className="flex flex-wrap gap-2 mb-6">
               {currentAnime.genres?.slice(0, 3).map((genre) => (
-                <span
-                  key={genre}
-                  className="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm"
-                >
+                <Badge key={genre} variant="secondary" className="bg-white/20 text-white hover:bg-white/30">
                   {genre}
-                </span>
+                </Badge>
               ))}
             </div>
 
             <div className="flex gap-4">
-              <Link
-                href={`/anime/${currentAnime.id}`}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
-              >
-                View Details
-              </Link>
-              <Link
-                href="/anime/search"
-                className="px-6 py-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg font-semibold transition-colors"
-              >
-                Browse More
-              </Link>
+              <Button asChild size="lg">
+                <Link href={`/anime/${currentAnime.id}`}>
+                  View Details
+                </Link>
+              </Button>
+              <Button asChild variant="secondary" size="lg" className="bg-white/20 text-white hover:bg-white/30">
+                <Link href="/anime/search">
+                  Browse More
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
@@ -90,11 +87,13 @@ export function AnimeHero() {
       {/* Indicators */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
         {data.results.map((_, index) => (
-          <button
+          <Button
             key={index}
+            variant="ghost"
+            size="sm"
             onClick={() => setCurrentIndex(index)}
-            className={`w-3 h-3 rounded-full transition-colors ${
-              index === currentIndex ? 'bg-white' : 'bg-white bg-opacity-50'
+            className={`w-3 h-3 p-0 rounded-full transition-colors ${
+              index === currentIndex ? 'bg-white' : 'bg-white/50 hover:bg-white/70'
             }`}
           />
         ))}

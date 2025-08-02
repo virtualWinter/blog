@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAnimeEpisodes } from '@/lib/consumet';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface AnimeEpisodesProps {
   animeId: string;
@@ -16,19 +20,21 @@ export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
   if (loading) {
     return (
       <section className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900">Episodes</h2>
+        <h2 className="text-2xl font-bold">Episodes</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="bg-white border rounded-lg p-4 animate-pulse">
-              <div className="flex items-start gap-3">
-                <div className="w-16 h-12 bg-gray-200 rounded flex-shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded" />
-                  <div className="h-3 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Skeleton className="w-16 h-12 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </section>
@@ -47,12 +53,12 @@ export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
   return (
     <section className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-2xl font-bold">
           Episodes ({episodes.length})
         </h2>
         
         {totalPages > 1 && (
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-muted-foreground">
             Page {currentPage} of {totalPages}
           </div>
         )}
@@ -63,41 +69,48 @@ export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
           <Link
             key={episode.id}
             href={`/anime/watch/${animeId}/${episode.id}?episode=${episode.number}`}
-            className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer group block"
           >
-            <div className="flex items-start gap-3">
-              {episode.image && (
-                <img
-                  src={episode.image}
-                  alt={episode.title || `Episode ${episode.number}`}
-                  className="w-16 h-12 object-cover rounded flex-shrink-0 group-hover:scale-105 transition-transform"
-                />
-              )}
-              
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-sm text-gray-900 mb-1">
-                  Episode {episode.number}
+            <Card className="hover:shadow-md transition-shadow cursor-pointer group">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  {episode.image && (
+                    <div className="w-16 h-12 flex-shrink-0">
+                      <AspectRatio ratio={4/3}>
+                        <img
+                          src={episode.image}
+                          alt={episode.title || `Episode ${episode.number}`}
+                          className="w-full h-full object-cover rounded group-hover:scale-105 transition-transform"
+                        />
+                      </AspectRatio>
+                    </div>
+                  )}
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm mb-1">
+                      Episode {episode.number}
+                    </div>
+                    
+                    {episode.title && (
+                      <div className="text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                        {episode.title}
+                      </div>
+                    )}
+                    
+                    {episode.description && (
+                      <div className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                        {episode.description}
+                      </div>
+                    )}
+                    
+                    {episode.releaseDate && (
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(episode.releaseDate).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                
-                {episode.title && (
-                  <div className="text-sm text-gray-700 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
-                    {episode.title}
-                  </div>
-                )}
-                
-                {episode.description && (
-                  <div className="text-xs text-gray-500 line-clamp-2 mb-2">
-                    {episode.description}
-                  </div>
-                )}
-                
-                {episode.releaseDate && (
-                  <div className="text-xs text-gray-400">
-                    {new Date(episode.releaseDate).toLocaleDateString()}
-                  </div>
-                )}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </Link>
         ))}
       </div>
@@ -105,13 +118,13 @@ export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 mt-8">
-          <button
+          <Button
+            variant="outline"
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
-            className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
-          </button>
+          </Button>
           
           <div className="flex gap-1">
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -127,28 +140,25 @@ export function AnimeEpisodes({ animeId }: AnimeEpisodesProps) {
               }
               
               return (
-                <button
+                <Button
                   key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`px-3 py-2 rounded-lg ${
-                    currentPage === pageNum
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white border border-gray-300 hover:bg-gray-50'
-                  }`}
+                  size="sm"
                 >
                   {pageNum}
-                </button>
+                </Button>
               );
             })}
           </div>
           
-          <button
+          <Button
+            variant="outline"
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages}
-            className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
     </section>
